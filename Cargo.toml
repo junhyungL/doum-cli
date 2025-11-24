@@ -11,6 +11,10 @@ keywords = ["cli", "terminal", "assistant", "ai", "llm"]
 categories = ["command-line-utilities", "development-tools"]
 readme = "README.md"
 
+[[bin]]
+name = "doum"
+path = "src/main.rs"
+
 [dependencies]
 # CLI Parsing
 clap = { version = "4.5", features = ["derive"] }

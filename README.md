@@ -17,10 +17,33 @@
 
 ### Installation
 
+#### Using Installation Script (Recommended)
+
+**Linux / macOS:**
 ```bash
-git clone https://github.com/yourusername/doum-cli.git
-cd doum-cli
-cargo install --path .
+curl -fsSL https://raw.githubusercontent.com/junhyungL/doum-cli/main/scripts/install.sh | sh
+```
+
+**Windows (PowerShell):**
+```powershell
+iwr -useb https://raw.githubusercontent.com/junhyungL/doum-cli/main/scripts/install.ps1 | iex
+```
+
+#### From GitHub Releases
+
+Download the latest binary for your platform from [Releases](https://github.com/junhyungL/doum-cli/releases):
+
+- **Linux**: `doum-linux-x86_64.tar.gz`
+- **macOS (Intel)**: `doum-macos-x86_64.tar.gz`
+- **macOS (Apple Silicon)**: `doum-macos-aarch64.tar.gz`
+- **Windows**: `doum-windows-x86_64.zip`
+
+Extract and add to your PATH.
+
+#### Using Cargo
+
+```bash
+cargo install doum-cli
 ```
 
 ### Setup API Key
