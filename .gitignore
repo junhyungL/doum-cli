@@ -1,0 +1,9 @@
+# Editor directories
+.vscode/
+.idea/
+
+# Dependency files
+Cargo.lock
+
+# Build Outputs
+/target

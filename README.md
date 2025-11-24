@@ -1,0 +1,89 @@
+# doum-cli
+
+🤖 **AI-Powered Terminal Assistant** - Natural language interface for OS commands
+
+[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+## Features
+
+- 💬 **Ask Mode**: Get answers to technical questions
+- 🔍 **Suggest Mode**: Command suggestions with copy/execute options
+- 🎯 **Auto Mode**: LLM automatically selects the appropriate mode
+- ⚙️ **Config TUI**: Interactive configuration menu built with ratatui
+- 🌍 **Multi-Provider**: Support for OpenAI (GPT) and Anthropic (Claude)
+
+## Quick Start
+
+### Installation
+
+```bash
+git clone https://github.com/yourusername/doum-cli.git
+cd doum-cli
+cargo install --path .
+```
+
+### Setup API Key
+
+```bash
+doum config
+# LLM Settings → Providers → OpenAI → Edit API Key
+```
+
+### Usage Examples
+
+```bash
+# Ask questions
+doum ask "What is Docker?"
+
+# Get command suggestions
+doum suggest "find large files"
+→ Select option → Choose Copy/Execute
+
+# Auto mode
+doum "check disk usage"
+```
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `doum ask <question>` | Ask questions and get answers |
+| `doum suggest <task>` | Get command suggestions and execute |
+| `doum config` | Manage configuration (TUI) |
+| `doum <input>` | Auto mode (LLM selects mode) |
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md) - Architecture and module structure
+- [Commands](docs/COMMANDS.md) - Detailed command reference
+- [Quick Start](docs/QUICKSTART.md) - Installation and getting started
+- [TODO](docs/TODO.md) - Development roadmap
+
+## Tech Stack
+
+- **Language**: Rust 2024
+- **Terminal UI**: dialoguer, ratatui (config TUI)
+- **LLM**: OpenAI GPT, Anthropic Claude
+
+## Development
+
+```bash
+# Build
+cargo build --release
+
+# Run tests
+cargo test
+
+# Run
+./target/release/doum-cli
+```
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details
+
+## Acknowledgments
+
+- Powered by [OpenAI](https://openai.com/) & [Anthropic](https://www.anthropic.com/)
+- Built with [Rust](https://www.rust-lang.org/) 🦀
