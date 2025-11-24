@@ -64,11 +64,10 @@ pub fn detect_os() -> OsType {
 pub fn detect_shell() -> ShellType {
     // Windows에서는 ComSpec 환경 변수 확인
     if cfg!(target_os = "windows") {
-        if let Ok(comspec) = env::var("COMSPEC") {
-            if comspec.to_lowercase().contains("cmd.exe") {
+        if let Ok(comspec) = env::var("COMSPEC")
+            && comspec.to_lowercase().contains("cmd.exe") {
                 return ShellType::Cmd;
             }
-        }
         
         // PSModulePath가 있으면 PowerShell
         if env::var("PSModulePath").is_ok() {

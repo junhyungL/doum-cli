@@ -16,7 +16,7 @@ pub fn run_llm_menu() -> Result<()> {
             .with_back()
             .add_item(
                 "provider",
-                &format!("Provider [current: {}]", config.llm.provider),
+                format!("Provider [current: {}]", config.llm.provider),
                 "Select and configure the default LLM provider"
             )
             .add_item(
@@ -31,22 +31,22 @@ pub fn run_llm_menu() -> Result<()> {
             )
             .add_item(
                 "timeout",
-                &format!("Timeout [current: {}s]", config.llm.timeout),
-                &format!("Request timeout in seconds (current: {}s)", config.llm.timeout)
+                format!("Timeout [current: {}s]", config.llm.timeout),
+                format!("Request timeout in seconds (current: {}s)", config.llm.timeout)
             )
             .add_item(
                 "retry",
-                &format!("Max Retry [current: {}]", config.llm.max_retries),
-                &format!("Maximum retry attempts (current: {})", config.llm.max_retries)
+                format!("Max Retry [current: {}]", config.llm.max_retries),
+                format!("Maximum retry attempts (current: {})", config.llm.max_retries)
             )
             .add_item(
                 "thinking",
-                &format!("Use Thinking [current: {}]", if config.llm.use_thinking { "enabled" } else { "disabled" }),
+                format!("Use Thinking [current: {}]", if config.llm.use_thinking { "enabled" } else { "disabled" }),
                 "Enable/disable extended thinking for complex tasks"
             )
             .add_item(
                 "web_search",
-                &format!("Use Web Search [current: {}]", if config.llm.use_web_search { "enabled" } else { "disabled" }),
+                format!("Use Web Search [current: {}]", if config.llm.use_web_search { "enabled" } else { "disabled" }),
                 "Enable/disable web search capability"
             )
             .build();

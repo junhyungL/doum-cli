@@ -1,4 +1,4 @@
-/// Anthropic LLM integration module.
+//! Anthropic LLM integration module.
 
 pub mod client;
 pub mod payloads;

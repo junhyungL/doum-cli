@@ -33,7 +33,7 @@ pub async fn select_and_execute(
             };
             Box::pin(client.generate(request))
         },
-        |content| parse_mode_select(content),
+        parse_mode_select,
         config.llm.max_retries,
     )
     .await?;

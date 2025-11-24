@@ -117,12 +117,12 @@ fn run_openai_config() -> Result<()> {
             .with_back()
             .add_item(
                 "model",
-                &format!("Model [current: {}]", model),
-                &format!("Select GPT model (current: {})", model)
+                format!("Model [current: {}]", model),
+                format!("Select GPT model (current: {})", model)
             )
             .add_item(
                 "api_key",
-                &format!("API Key [{}]", api_key_display),
+                format!("API Key [{}]", api_key_display),
                 "Set your OpenAI API key (starts with sk-)"
             )
             .add_item(
@@ -199,12 +199,12 @@ fn run_anthropic_config() -> Result<()> {
             .with_back()
             .add_item(
                 "model",
-                &format!("Model [current: {}]", model),
-                &format!("Select Claude model (current: {})", model)
+                format!("Model [current: {}]", model),
+                format!("Select Claude model (current: {})", model)
             )
             .add_item(
                 "api_key",
-                &format!("API Key [{}]", api_key_display),
+                format!("API Key [{}]", api_key_display),
                 "Set your Anthropic API key (starts with sk-ant-)"
             )
             .build();

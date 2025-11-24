@@ -34,7 +34,7 @@ pub async fn handle_suggest(
             };
             Box::pin(client.generate(request))
         },
-        |content| parse_suggest(content),
+        parse_suggest,
         config.llm.max_retries,
     )
     .await?;

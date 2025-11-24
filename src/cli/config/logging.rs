@@ -15,13 +15,13 @@ pub fn run_logging_menu() -> Result<()> {
             .with_back()
             .add_item(
                 "enabled",
-                &format!("Enabled [current: {}]", config.logging.enabled),
-                &format!("Enable/disable logging (currently: {})", config.logging.enabled)
+                format!("Enabled [current: {}]", config.logging.enabled),
+                format!("Enable/disable logging (currently: {})", config.logging.enabled)
             )
             .add_item(
                 "level",
-                &format!("Level [current: {}]", config.logging.level),
-                &format!("Log level (currently: {})", config.logging.level)
+                format!("Level [current: {}]", config.logging.level),
+                format!("Log level (currently: {})", config.logging.level)
             )
             .build();
         

@@ -108,11 +108,10 @@ impl LLMClient for OpenAIClient {
 
         // message 타입의 output에서 content 추출
         for output in openai_response.output {
-            if let OpenAIOutput::Message { content } = output {
-                if let Some(first_content) = content.first() {
+            if let OpenAIOutput::Message { content } = output
+                && let Some(first_content) = content.first() {
                     return Ok(first_content.text.clone());
                 }
-            }
         }
         
         Err(DoumError::Parse(

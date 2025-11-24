@@ -54,7 +54,7 @@ async fn run() -> Result<()> {
             } else {
                 // 인자가 없다면 커맨드 설명
                 tracing::info!("명령어 인자 없음 - 도움말 출력");
-                Cli::parse_from(&["doum-cli", "--help"]);
+                Cli::parse_from(["doum-cli", "--help"]);
                 Ok(())
             }
         }

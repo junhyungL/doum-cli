@@ -1,4 +1,4 @@
-/// OpenAI LLM integration module.
+//! OpenAI LLM integration module.
 
 pub mod client;
 pub mod payloads;

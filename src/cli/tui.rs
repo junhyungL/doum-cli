@@ -103,10 +103,10 @@ impl<'a> SelectApp<'a> {
 }
 
 /// Run the select app
-fn run_select_app<'a>(
+fn run_select_app(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     title: &str,
-    items: &'a [MenuItem],
+    items: &[MenuItem],
     subtitle: Option<&str>,
     current_value: Option<&str>,
 ) -> Result<Option<MenuItem>> {
@@ -117,9 +117,8 @@ fn run_select_app<'a>(
             .map_err(|e| DoumError::Config(format!("Failed to draw: {}", e)))?;
 
         if let Event::Key(key) = event::read()
-            .map_err(|e| DoumError::Config(format!("Failed to read event: {}", e)))? 
-        {
-            if key.kind == KeyEventKind::Press {
+            .map_err(|e| DoumError::Config(format!("Failed to read event: {}", e)))?
+            && key.kind == KeyEventKind::Press {
                 match key.code {
                     KeyCode::Char('q') | KeyCode::Esc => return Ok(None),
                     KeyCode::Down | KeyCode::Char('j') => app.next(),
@@ -130,7 +129,6 @@ fn run_select_app<'a>(
                     _ => {}
                 }
             }
-        }
     }
 }
 
@@ -163,7 +161,7 @@ fn ui(f: &mut Frame, app: &mut SelectApp) {
     // List items with minimal styling
     let items: Vec<ListItem> = app.items.iter().enumerate().map(|(idx, item)| {
         let is_selected = Some(idx) == app.state.selected();
-        let is_current = app.current_value.as_ref().map_or(false, |cv| &item.id == cv);
+        let is_current = app.current_value.as_ref() == Some(&item.id);
         
         let mut label = String::new();
         let mut style = Style::default();
@@ -342,9 +340,8 @@ fn run_input_app(
             .map_err(|e| DoumError::Config(format!("Failed to draw: {}", e)))?;
 
         if let Event::Key(key) = event::read()
-            .map_err(|e| DoumError::Config(format!("Failed to read event: {}", e)))? 
-        {
-            if key.kind == KeyEventKind::Press {
+            .map_err(|e| DoumError::Config(format!("Failed to read event: {}", e)))?
+            && key.kind == KeyEventKind::Press {
                 match key.code {
                     KeyCode::Enter => return Ok(app.input.clone()),
                     KeyCode::Char(c) => app.enter_char(c),
@@ -355,7 +352,6 @@ fn run_input_app(
                     _ => {}
                 }
             }
-        }
     }
 }
 
@@ -441,9 +437,8 @@ fn run_password_app(
             .map_err(|e| DoumError::Config(format!("Failed to draw: {}", e)))?;
 
         if let Event::Key(key) = event::read()
-            .map_err(|e| DoumError::Config(format!("Failed to read event: {}", e)))? 
-        {
-            if key.kind == KeyEventKind::Press {
+            .map_err(|e| DoumError::Config(format!("Failed to read event: {}", e)))?
+            && key.kind == KeyEventKind::Press {
                 match key.code {
                     KeyCode::Enter => return Ok(app.input.clone()),
                     KeyCode::Char(c) => app.enter_char(c),
@@ -452,7 +447,6 @@ fn run_password_app(
                     _ => {}
                 }
             }
-        }
     }
 }
 

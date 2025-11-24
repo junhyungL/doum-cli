@@ -6,7 +6,7 @@ This project supports automated multi-platform deployment through GitHub Actions
 
 ## Supported Platforms
 
-- **Linux**: x86_64 (glibc, musl)
+- **Linux**: x86_64 (glibc)
 - **macOS**: x86_64 (Intel), aarch64 (Apple Silicon)
 - **Windows**: x86_64
 

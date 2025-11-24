@@ -15,13 +15,13 @@ pub fn run_context_menu() -> Result<()> {
             .with_back()
             .add_item(
                 "max_lines",
-                &format!("Max Lines [current: {}]", config.llm.context.max_lines),
-                &format!("Maximum number of lines to include (current: {})", config.llm.context.max_lines)
+                format!("Max Lines [current: {}]", config.llm.context.max_lines),
+                format!("Maximum number of lines to include (current: {})", config.llm.context.max_lines)
             )
             .add_item(
                 "max_size_kb",
-                &format!("Max Size [current: {} KB]", config.llm.context.max_size_kb),
-                &format!("Maximum context size in KB (current: {})", config.llm.context.max_size_kb)
+                format!("Max Size [current: {} KB]", config.llm.context.max_size_kb),
+                format!("Maximum context size in KB (current: {})", config.llm.context.max_size_kb)
             )
             .build();
         

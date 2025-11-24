@@ -89,8 +89,8 @@ pub struct LoggingConfig {
 fn ensure_config() -> Result<PathBuf> {
     let config_path = get_config_path()?;
     
-    if let Some(parent) = config_path.parent() {
-        if !parent.exists() {
+    if let Some(parent) = config_path.parent()
+        && !parent.exists() {
             fs::create_dir_all(parent)
                 .map_err(|e| DoumError::Config(format!("설정 디렉터리 생성 실패: {}", e)))?;
             
@@ -105,7 +105,6 @@ fn ensure_config() -> Result<PathBuf> {
                     .map_err(|e| DoumError::Config(format!("디렉터리 권한 설정 실패: {}", e)))?;
             }
         }
-    }
     
     Ok(config_path)
 }

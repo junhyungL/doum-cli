@@ -33,10 +33,10 @@ iwr -useb https://raw.githubusercontent.com/junhyungL/doum-cli/main/scripts/inst
 
 Download the latest binary for your platform from [Releases](https://github.com/junhyungL/doum-cli/releases):
 
-- **Linux**: `doum-linux-x86_64.tar.gz`
+- **Linux (x86_64)**: `doum-linux-x86_64.tar.gz`
 - **macOS (Intel)**: `doum-macos-x86_64.tar.gz`
 - **macOS (Apple Silicon)**: `doum-macos-aarch64.tar.gz`
-- **Windows**: `doum-windows-x86_64.zip`
+- **Windows (x86_64)**: `doum-windows-x86_64.zip`
 
 Extract and add to your PATH.
 

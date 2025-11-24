@@ -50,8 +50,8 @@ fn execute_windows(command: &str, shell: &ShellType, _timeout: Option<Duration>)
             c.arg(format!("[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; {}", command));
             c
         }
-        ShellType::Cmd | _ => {
-            // 기본값은 cmd.exe
+        ShellType::Cmd | ShellType::Bash | ShellType::Zsh | ShellType::Fish | ShellType::Unknown => {
+            // Windows에서는 기본값으로 cmd.exe 사용
             let mut c = Command::new("cmd.exe");
             c.arg("/C");
             // cmd는 chcp 65001로 UTF-8 설정
@@ -74,7 +74,7 @@ fn execute_unix(command: &str, shell: &ShellType, _timeout: Option<Duration>) ->
         ShellType::Bash => "/bin/bash",
         ShellType::Zsh => "/bin/zsh",
         ShellType::Fish => "/usr/bin/fish",
-        ShellType::Unknown | _ => "/bin/sh", // 기본값
+        _ => "/bin/sh", // 기본값
     };
 
     let mut cmd = Command::new(shell_path);

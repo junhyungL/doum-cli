@@ -62,8 +62,8 @@ fn extract_json(text: &str) -> String {
     let text = text.trim();
     
     // ```json ... ``` 또는 ``` ... ``` 형식 처리
-    if let Some(start) = text.find("```") {
-        if let Some(end) = text[start + 3..].find("```") {
+    if let Some(start) = text.find("```")
+        && let Some(end) = text[start + 3..].find("```") {
             let json_block = &text[start + 3..start + 3 + end];
             // ```json 같은 언어 태그 제거
             let json_content = if let Some(newline) = json_block.find('\n') {
@@ -73,16 +73,13 @@ fn extract_json(text: &str) -> String {
             };
             return json_content.trim().to_string();
         }
-    }
     
     // { 로 시작하는 JSON 찾기
-    if let Some(start) = text.find('{') {
-        if let Some(end) = text.rfind('}') {
-            if end > start {
+    if let Some(start) = text.find('{')
+        && let Some(end) = text.rfind('}')
+            && end > start {
                 return text[start..=end].to_string();
             }
-        }
-    }
     
     // 그대로 반환
     text.to_string()
