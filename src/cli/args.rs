@@ -8,7 +8,7 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,
-    
+
     /// Auto mode: Automatically select mode based on input
     #[arg(value_name = "INPUT")]
     pub input: Option<String>,
@@ -32,7 +32,6 @@ pub enum Commands {
         request: String,
     },
 }
-
 
 #[derive(Subcommand, Debug)]
 pub enum ConfigAction {

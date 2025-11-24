@@ -1,15 +1,18 @@
+use crate::cli::ui::{
+    CommandAction, confirm_execution, copy_to_clipboard, create_spinner, finish_spinner,
+    prompt_for_command_selection,
+};
 use crate::llm::Message;
 use crate::llm::client::LLMRequest;
-use crate::system::error::Result;
+use crate::llm::retry_with_parse;
+use crate::llm::{LLMClient, PromptBuilder, parse_suggest};
 use crate::system::Config;
 use crate::system::SystemInfo;
-use crate::llm::{LLMClient, PromptBuilder, parse_suggest};
-use crate::cli::ui::{prompt_for_command_selection, copy_to_clipboard, confirm_execution, CommandAction, create_spinner, finish_spinner};
-use crate::llm::retry_with_parse;
+use crate::system::error::Result;
 use crate::tools::execute;
 
 /// Suggest 모드 핵심 로직
-/// 
+///
 /// 사용자의 요청에 대해 여러 명령 후보를 제안하고 선택받습니다.
 /// 선택된 명령은 클립보드에 복사하거나 즉시 실행할 수 있습니다.
 pub async fn handle_suggest(
@@ -20,10 +23,10 @@ pub async fn handle_suggest(
 ) -> Result<Option<String>> {
     // 프롬프트 빌더 생성
     let builder = PromptBuilder::new(system_info.clone());
-    
+
     // 스피너 시작
     let spinner = create_spinner("AI is generating commands...");
-    
+
     // LLM 호출 및 재시도 파싱
     let response = retry_with_parse(
         || {
@@ -38,20 +41,20 @@ pub async fn handle_suggest(
         config.llm.max_retries,
     )
     .await?;
-    
+
     // 스피너 완료
     finish_spinner(spinner, None);
-    
+
     if response.suggestions.is_empty() {
         println!("⚠️  No commands to suggest.\n");
         return Ok(None);
     }
-    
+
     // 사용자 선택 받기 (dialoguer 사용)
     match prompt_for_command_selection(&response.suggestions)? {
         Some((index, action)) => {
             let selected = &response.suggestions[index];
-            
+
             match action {
                 CommandAction::Copy => {
                     // 클립보드에 복사
@@ -72,12 +75,12 @@ pub async fn handle_suggest(
                     // 실행 확인
                     if confirm_execution(&selected.cmd)? {
                         println!("\n▶️  Executing command...\n");
-                        
+
                         match execute(&selected.cmd, system_info) {
                             Ok(output) => {
                                 let stdout = String::from_utf8_lossy(&output.stdout);
                                 let stderr = String::from_utf8_lossy(&output.stderr);
-                                
+
                                 println!("{}", stdout);
                                 if !stderr.is_empty() {
                                     eprintln!("\nStderr:\n{}", stderr);

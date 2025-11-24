@@ -1,18 +1,18 @@
-use crate::system::error::Result;
-use crate::system::{load_config, save_config, get_config_path, load_default_config, get_system_info};
-use crate::llm::create_client;
-use crate::core::{handle_ask, handle_suggest, select_and_execute};
 use super::args::ConfigAction;
+use crate::core::{handle_ask, handle_suggest, select_and_execute};
+use crate::llm::create_client;
+use crate::system::error::Result;
+use crate::system::{
+    get_config_path, get_system_info, load_config, load_default_config, save_config,
+};
 
 /// config 커맨드 처리
 pub fn handle_config_command(action: Option<ConfigAction>) -> Result<()> {
     // action이 None이면 interactive 모드로
     let action = action.unwrap_or(ConfigAction::Interactive);
-    
+
     match action {
-        ConfigAction::Interactive => {
-            crate::cli::config::run_config_interactive()
-        }
+        ConfigAction::Interactive => crate::cli::config::run_config_interactive(),
         ConfigAction::Show => show_config(),
         ConfigAction::Reset => reset_config(),
     }
@@ -22,13 +22,13 @@ pub fn handle_config_command(action: Option<ConfigAction>) -> Result<()> {
 fn show_config() -> Result<()> {
     let config = load_config()?;
     let config_path = get_config_path()?;
-    
+
     println!("Config file location: {}\n", config_path.display());
-    
+
     let toml_str = toml::to_string_pretty(&config)?;
-    
+
     println!("{}", toml_str);
-    
+
     Ok(())
 }
 
@@ -36,9 +36,9 @@ fn show_config() -> Result<()> {
 fn reset_config() -> Result<()> {
     let default_config = load_default_config()?;
     save_config(&default_config)?;
-    
+
     println!("✅ Configuration reset to default");
-    
+
     Ok(())
 }
 

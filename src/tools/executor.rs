@@ -1,5 +1,5 @@
+use crate::system::env::{OsType, ShellType, SystemInfo};
 use crate::system::error::{DoumError, Result};
-use crate::system::env::{SystemInfo, OsType, ShellType};
 use std::process::{Command, Output};
 use std::time::Duration;
 
@@ -47,10 +47,17 @@ fn execute_windows(command: &str, shell: &ShellType, _timeout: Option<Duration>)
             c.arg("-NoProfile");
             c.arg("-Command");
             // PowerShell은 기본적으로 UTF-8 처리
-            c.arg(format!("[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; {}", command));
+            c.arg(format!(
+                "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; {}",
+                command
+            ));
             c
         }
-        ShellType::Cmd | ShellType::Bash | ShellType::Zsh | ShellType::Fish | ShellType::Unknown => {
+        ShellType::Cmd
+        | ShellType::Bash
+        | ShellType::Zsh
+        | ShellType::Fish
+        | ShellType::Unknown => {
             // Windows에서는 기본값으로 cmd.exe 사용
             let mut c = Command::new("cmd.exe");
             c.arg("/C");

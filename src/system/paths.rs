@@ -12,26 +12,28 @@ pub fn get_app_dir() -> Result<PathBuf> {
             .map_err(|_| DoumError::Config("APPDATA 환경 변수를 찾을 수 없습니다".to_string()))?;
         Ok(PathBuf::from(appdata).join("doum-cli"))
     }
-    
+
     #[cfg(target_os = "macos")]
     {
         let home = std::env::var("HOME")
             .map_err(|_| DoumError::Config("HOME 환경 변수를 찾을 수 없습니다".to_string()))?;
         Ok(PathBuf::from(home).join("Library/Application Support/doum-cli"))
     }
-    
+
     #[cfg(target_os = "linux")]
     {
         let home = std::env::var("HOME")
             .map_err(|_| DoumError::Config("HOME 환경 변수를 찾을 수 없습니다".to_string()))?;
-        let config_home = std::env::var("XDG_CONFIG_HOME")
-            .unwrap_or_else(|_| format!("{}/.config", home));
+        let config_home =
+            std::env::var("XDG_CONFIG_HOME").unwrap_or_else(|_| format!("{}/.config", home));
         Ok(PathBuf::from(config_home).join("doum-cli"))
     }
-    
+
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     {
-        Err(DoumError::Config("지원하지 않는 운영체제입니다".to_string()))
+        Err(DoumError::Config(
+            "지원하지 않는 운영체제입니다".to_string(),
+        ))
     }
 }
 

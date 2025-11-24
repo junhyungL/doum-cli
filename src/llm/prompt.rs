@@ -1,7 +1,7 @@
 use crate::system::SystemInfo;
 use handlebars::Handlebars;
-use serde_json::json;
 use rust_embed::RustEmbed;
+use serde_json::json;
 
 /// 프롬프트 정적 파일 임베딩
 #[derive(RustEmbed)]
@@ -17,7 +17,7 @@ pub struct PromptBuilder {
 impl PromptBuilder {
     /// 새 프롬프트 빌더 생성
     pub fn new(system_info: SystemInfo) -> Self {
-        Self { 
+        Self {
             system_info,
             handlebars: Handlebars::new(),
         }
@@ -26,7 +26,11 @@ impl PromptBuilder {
     /// 프롬프트 파일 로드
     fn load_prompt(name: &str) -> String {
         PromptAssets::get(name)
-            .and_then(|file| std::str::from_utf8(file.data.as_ref()).ok().map(|s| s.to_string()))
+            .and_then(|file| {
+                std::str::from_utf8(file.data.as_ref())
+                    .ok()
+                    .map(|s| s.to_string())
+            })
             .unwrap_or_else(|| {
                 eprintln!("Warning: Failed to load prompt file: {}", name);
                 tracing::warn!("Failed to load prompt file: {}", name);
@@ -37,7 +41,7 @@ impl PromptBuilder {
     /// 시스템 프롬프트 생성
     fn build_common_prompt(&self) -> String {
         let template = Self::load_prompt("common.md");
-        
+
         let data = json!({
             "os": self.system_info.os.as_str(),
             "shell": self.system_info.shell.as_str(),
@@ -46,7 +50,8 @@ impl PromptBuilder {
             "hostname": self.system_info.hostname.as_deref().unwrap_or("unknown"),
         });
 
-        self.handlebars.render_template(&template, &data)
+        self.handlebars
+            .render_template(&template, &data)
             .unwrap_or(template)
     }
 
@@ -69,7 +74,9 @@ impl PromptBuilder {
             "shell": self.system_info.shell.as_str(),
         });
 
-        let suggest_prompt = self.handlebars.render_template(&suggest_template, &data)
+        let suggest_prompt = self
+            .handlebars
+            .render_template(&suggest_template, &data)
             .unwrap_or(suggest_template);
 
         let prompt = format!("{}\n\n---\n\n{}", common_prompt, suggest_prompt);
@@ -80,7 +87,7 @@ impl PromptBuilder {
     pub fn build_mode_select(&self) -> String {
         let common_prompt = self.build_common_prompt();
         let mode_select_template = Self::load_prompt("mode_select.md");
-        
+
         let prompt = format!("{}\n\n---\n\n{}", common_prompt, mode_select_template);
         prompt
     }

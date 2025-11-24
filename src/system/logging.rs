@@ -1,8 +1,8 @@
 use crate::system::config::Config;
 use crate::system::error::{DoumError, Result};
 use crate::system::paths::get_log_dir;
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
+use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 /// 로깅 시스템 초기화
 pub fn init_logging(config: &Config) -> Result<()> {
@@ -45,7 +45,7 @@ pub fn init_logging(config: &Config) -> Result<()> {
             fmt::layer()
                 .with_writer(file_appender)
                 .with_ansi(false)
-                .with_target(false)
+                .with_target(false),
         )
         .try_init()
         .map_err(|e| DoumError::Config(format!("로깅 초기화 실패: {}", e)))?;

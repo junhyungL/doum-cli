@@ -1,9 +1,9 @@
-use crate::system::error::{DoumError, Result};
 use crate::llm::CommandSuggestion;
+use crate::system::error::{DoumError, Result};
 use arboard::Clipboard;
-use indicatif::{ProgressBar, ProgressStyle};
-use dialoguer::{Select, Confirm, Input, Password, theme::ColorfulTheme};
 use console::Style;
+use dialoguer::{Confirm, Input, Password, Select, theme::ColorfulTheme};
+use indicatif::{ProgressBar, ProgressStyle};
 use std::time::Duration;
 
 // UI module for all user interactions (ask, suggest modes)
@@ -18,7 +18,9 @@ pub enum CommandAction {
 }
 
 /// Enhanced command selection with dialoguer
-pub fn prompt_for_command_selection(suggestions: &[CommandSuggestion]) -> Result<Option<(usize, CommandAction)>> {
+pub fn prompt_for_command_selection(
+    suggestions: &[CommandSuggestion],
+) -> Result<Option<(usize, CommandAction)>> {
     if suggestions.is_empty() {
         println!("\n⚠️  No commands to suggest.");
         return Ok(None);
@@ -51,15 +53,11 @@ pub fn prompt_for_command_selection(suggestions: &[CommandSuggestion]) -> Result
     match selection {
         Some(index) => {
             let selected_cmd = &suggestions[index].cmd;
-            
+
             // Ask what to do with the command
             println!("\n📋 Selected: {}", cmd_style.apply_to(selected_cmd));
-            
-            let actions = vec![
-                "📋 Copy to clipboard",
-                "▶️  Execute now",
-                "❌ Cancel",
-            ];
+
+            let actions = vec!["📋 Copy to clipboard", "▶️  Execute now", "❌ Cancel"];
 
             let action = Select::with_theme(&theme)
                 .with_prompt("What would you like to do?")
@@ -82,9 +80,9 @@ pub fn prompt_for_command_selection(suggestions: &[CommandSuggestion]) -> Result
 pub fn confirm_execution(command: &str) -> Result<bool> {
     let theme = ColorfulTheme::default();
     let cmd_style = Style::new().cyan().bold();
-    
+
     println!("\n📋 Command: {}", cmd_style.apply_to(command));
-    
+
     Confirm::with_theme(&theme)
         .with_prompt("Execute this command?")
         .default(true)
@@ -95,14 +93,13 @@ pub fn confirm_execution(command: &str) -> Result<bool> {
 /// Text input prompt
 pub fn prompt_text_input(message: &str, default: Option<&str>) -> Result<String> {
     let theme = ColorfulTheme::default();
-    
-    let mut input = Input::with_theme(&theme)
-        .with_prompt(message);
-    
+
+    let mut input = Input::with_theme(&theme).with_prompt(message);
+
     if let Some(def) = default {
         input = input.default(def.to_string());
     }
-    
+
     input
         .interact_text()
         .map_err(|e| DoumError::Config(format!("Input failed: {}", e)))
@@ -111,7 +108,7 @@ pub fn prompt_text_input(message: &str, default: Option<&str>) -> Result<String>
 /// Password input prompt
 pub fn prompt_password_input(message: &str) -> Result<String> {
     let theme = ColorfulTheme::default();
-    
+
     Password::with_theme(&theme)
         .with_prompt(message)
         .interact()
@@ -125,14 +122,13 @@ where
     T::Err: std::fmt::Display,
 {
     let theme = ColorfulTheme::default();
-    
-    let mut input = Input::with_theme(&theme)
-        .with_prompt(message);
-    
+
+    let mut input = Input::with_theme(&theme).with_prompt(message);
+
     if let Some(def) = default {
         input = input.default(def);
     }
-    
+
     input
         .interact_text()
         .map_err(|e| DoumError::Config(format!("Number input failed: {}", e)))
@@ -140,13 +136,13 @@ where
 
 /// Copy text to clipboard
 pub fn copy_to_clipboard(text: &str) -> Result<()> {
-    let mut clipboard = Clipboard::new()
-        .map_err(|e| DoumError::Config(format!("Clipboard init failed: {}", e)))?;
-    
+    let mut clipboard =
+        Clipboard::new().map_err(|e| DoumError::Config(format!("Clipboard init failed: {}", e)))?;
+
     clipboard
         .set_text(text)
         .map_err(|e| DoumError::Config(format!("Clipboard copy failed: {}", e)))?;
-    
+
     Ok(())
 }
 
@@ -157,7 +153,7 @@ pub fn create_spinner(message: &str) -> ProgressBar {
         ProgressStyle::default_spinner()
             .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
             .template("{spinner:.cyan} {msg}")
-            .unwrap()
+            .unwrap(),
     );
     spinner.set_message(message.to_string());
     spinner.enable_steady_tick(Duration::from_millis(80));

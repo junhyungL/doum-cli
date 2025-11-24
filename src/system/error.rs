@@ -80,21 +80,24 @@ impl DoumError {
                      💡 Solution:\n\
                      1. Set your API key: doum config set llm.api_key sk-...\n\
                      2. Get a key from: https://platform.openai.com/api-keys\n\
-                     3. Verify key format (starts with 'sk-')".to_string()
+                     3. Verify key format (starts with 'sk-')"
+                        .to_string()
                 } else if msg.contains("timeout") || msg.contains("timed out") {
                     "⏱️  Request Timeout\n\n\
                      Problem: LLM request took too long\n\n\
                      💡 Solution:\n\
                      1. Increase timeout: doum config set llm.timeout 60\n\
                      2. Check your internet connection\n\
-                     3. Try again in a few moments".to_string()
+                     3. Try again in a few moments"
+                        .to_string()
                 } else if msg.contains("rate limit") || msg.contains("429") {
                     "🚦 Rate Limit Exceeded\n\n\
                      Problem: Too many requests to the API\n\n\
                      💡 Solution:\n\
                      1. Wait a moment and try again\n\
                      2. Check your API quota at: https://platform.openai.com/usage\n\
-                     3. Consider upgrading your plan".to_string()
+                     3. Consider upgrading your plan"
+                        .to_string()
                 } else {
                     format!(
                         "🤖 LLM API Error\n\n\
@@ -131,10 +134,9 @@ impl DoumError {
                     msg
                 )
             }
-            DoumError::UserCancelled => {
-                "❌ Operation Cancelled\n\n\
-                 You cancelled the operation. No changes were made.".to_string()
-            }
+            DoumError::UserCancelled => "❌ Operation Cancelled\n\n\
+                 You cancelled the operation. No changes were made."
+                .to_string(),
             DoumError::InvalidConfig(msg) => {
                 format!(
                     "🔧 Invalid Configuration\n\n\
@@ -146,14 +148,13 @@ impl DoumError {
                     msg
                 )
             }
-            DoumError::Timeout => {
-                "⏱️  Request Timeout\n\n\
+            DoumError::Timeout => "⏱️  Request Timeout\n\n\
                  Problem: The request took too long\n\n\
                  💡 Solution:\n\
                  1. Increase timeout: doum config set llm.timeout 60\n\
                  2. Check your internet connection\n\
-                 3. Try with a simpler request".to_string()
-            }
+                 3. Try with a simpler request"
+                .to_string(),
             DoumError::Io(err) => {
                 format!(
                     "💾 File System Error\n\n\
@@ -172,14 +173,16 @@ impl DoumError {
                      💡 Solution:\n\
                      1. Check your internet connection\n\
                      2. Increase timeout: doum config set llm.timeout 60\n\
-                     3. Try again in a few moments".to_string()
+                     3. Try again in a few moments"
+                        .to_string()
                 } else if err.is_connect() {
                     "🌐 Connection Error\n\n\
                      Problem: Failed to connect to the API\n\n\
                      💡 Solution:\n\
                      1. Check your internet connection\n\
                      2. Verify firewall settings\n\
-                     3. Check if you need a proxy".to_string()
+                     3. Check if you need a proxy"
+                        .to_string()
                 } else {
                     format!(
                         "🌐 Network Error\n\n\

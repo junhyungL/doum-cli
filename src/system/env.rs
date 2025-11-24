@@ -36,9 +36,7 @@ pub fn get_system_info() -> SystemInfo {
         os: detect_os(),
         shell: detect_shell(),
         current_dir: env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),
-        username: env::var("USERNAME")
-            .or_else(|_| env::var("USER"))
-            .ok(),
+        username: env::var("USERNAME").or_else(|_| env::var("USER")).ok(),
         hostname: env::var("COMPUTERNAME")
             .or_else(|_| env::var("HOSTNAME"))
             .ok(),
@@ -49,13 +47,13 @@ pub fn get_system_info() -> SystemInfo {
 pub fn detect_os() -> OsType {
     #[cfg(target_os = "windows")]
     return OsType::Windows;
-    
+
     #[cfg(target_os = "linux")]
     return OsType::Linux;
-    
+
     #[cfg(target_os = "macos")]
     return OsType::MacOS;
-    
+
     #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
     return OsType::Linux; // 기본값
 }
@@ -65,22 +63,23 @@ pub fn detect_shell() -> ShellType {
     // Windows에서는 ComSpec 환경 변수 확인
     if cfg!(target_os = "windows") {
         if let Ok(comspec) = env::var("COMSPEC")
-            && comspec.to_lowercase().contains("cmd.exe") {
-                return ShellType::Cmd;
-            }
-        
+            && comspec.to_lowercase().contains("cmd.exe")
+        {
+            return ShellType::Cmd;
+        }
+
         // PSModulePath가 있으면 PowerShell
         if env::var("PSModulePath").is_ok() {
             return ShellType::PowerShell;
         }
-        
+
         return ShellType::Cmd; // Windows 기본값
     }
-    
+
     // Unix 계열에서는 SHELL 환경 변수 확인
     if let Ok(shell) = env::var("SHELL") {
         let shell_lower = shell.to_lowercase();
-        
+
         if shell_lower.contains("bash") {
             return ShellType::Bash;
         } else if shell_lower.contains("zsh") {
@@ -89,10 +88,10 @@ pub fn detect_shell() -> ShellType {
             return ShellType::Fish;
         }
     }
-    
+
     // 부모 프로세스 이름으로 추가 확인 시도 (간단한 방법)
     // 실제로는 더 정교한 감지가 필요할 수 있음
-    
+
     ShellType::Unknown
 }
 
@@ -167,7 +166,7 @@ mod tests {
             username: Some("testuser".to_string()),
             hostname: None,
         };
-        
+
         let display = info.display();
         assert!(display.contains("OS: Linux"));
         assert!(display.contains("Username: testuser"));

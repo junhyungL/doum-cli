@@ -1,8 +1,8 @@
-use crate::system::error::{DoumError, Result};
-use crate::llm::client::{LLMClient, LLMRequest};
 use crate::llm::anthropic::payloads::{
-    AnthropicConfig, AnthropicRequest, AnthropicResponse, AnthropicError,
+    AnthropicConfig, AnthropicError, AnthropicRequest, AnthropicResponse,
 };
+use crate::llm::client::{LLMClient, LLMRequest};
+use crate::system::error::{DoumError, Result};
 use reqwest::Client;
 use std::time::Duration;
 
@@ -49,7 +49,8 @@ impl LLMClient for AnthropicClient {
         };
 
         // API 요청
-        let response = self.http_client
+        let response = self
+            .http_client
             .post(Self::API_URL)
             .header("x-api-key", &self.config.api_key)
             .header("anthropic-version", Self::API_VERSION)
@@ -69,37 +70,38 @@ impl LLMClient for AnthropicClient {
 
         // HTTP 상태 코드 확인
         let status = response.status();
-        
+
         if !status.is_success() {
-            let error_text = response.text().await
+            let error_text = response
+                .text()
+                .await
                 .unwrap_or_else(|_| "알 수 없는 에러".to_string());
-            
+
             // Anthropic 에러 응답 파싱 시도
             if let Ok(anthropic_error) = serde_json::from_str::<AnthropicError>(&error_text) {
                 return Err(DoumError::LLM(format!(
                     "Anthropic API 에러 ({}): {}",
-                    status,
-                    anthropic_error.error.message
+                    status, anthropic_error.error.message
                 )));
             }
-            
+
             return Err(DoumError::LLM(format!(
                 "API 요청 실패 ({}): {}",
-                status,
-                error_text
+                status, error_text
             )));
         }
 
         // 응답 파싱
-        let anthropic_response: AnthropicResponse = response.json().await
+        let anthropic_response: AnthropicResponse = response
+            .json()
+            .await
             .map_err(|e| DoumError::Parse(format!("API 응답 파싱 실패: {}", e)))?;
 
         // 첫 번째 content block의 text 추출
-        anthropic_response.content
+        anthropic_response
+            .content
             .first()
             .map(|block| block.text.clone())
-            .ok_or_else(|| DoumError::Parse(
-                "API 응답에 컨텐츠가 없습니다".to_string()
-            ))
+            .ok_or_else(|| DoumError::Parse("API 응답에 컨텐츠가 없습니다".to_string()))
     }
 }

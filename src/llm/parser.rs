@@ -36,7 +36,7 @@ pub struct ExecuteResponse {
 pub fn parse_mode_select(json_str: &str) -> Result<ModeSelectResponse> {
     // JSON 추출 시도 (markdown 코드 블록 제거)
     let cleaned = extract_json(json_str);
-    
+
     serde_json::from_str(&cleaned)
         .map_err(|e| DoumError::Parse(format!("모드 선택 응답 파싱 실패: {}", e)))
 }
@@ -44,7 +44,7 @@ pub fn parse_mode_select(json_str: &str) -> Result<ModeSelectResponse> {
 /// Suggest 응답 파싱
 pub fn parse_suggest(json_str: &str) -> Result<SuggestResponse> {
     let cleaned = extract_json(json_str);
-    
+
     serde_json::from_str(&cleaned)
         .map_err(|e| DoumError::Parse(format!("Suggest 응답 파싱 실패: {}", e)))
 }
@@ -52,7 +52,7 @@ pub fn parse_suggest(json_str: &str) -> Result<SuggestResponse> {
 /// Execute 응답 파싱
 pub fn parse_execute(json_str: &str) -> Result<ExecuteResponse> {
     let cleaned = extract_json(json_str);
-    
+
     serde_json::from_str(&cleaned)
         .map_err(|e| DoumError::Parse(format!("Execute 응답 파싱 실패: {}", e)))
 }
@@ -60,27 +60,29 @@ pub fn parse_execute(json_str: &str) -> Result<ExecuteResponse> {
 /// JSON 추출 (markdown 코드 블록이나 불필요한 텍스트 제거)
 fn extract_json(text: &str) -> String {
     let text = text.trim();
-    
+
     // ```json ... ``` 또는 ``` ... ``` 형식 처리
     if let Some(start) = text.find("```")
-        && let Some(end) = text[start + 3..].find("```") {
-            let json_block = &text[start + 3..start + 3 + end];
-            // ```json 같은 언어 태그 제거
-            let json_content = if let Some(newline) = json_block.find('\n') {
-                &json_block[newline + 1..]
-            } else {
-                json_block
-            };
-            return json_content.trim().to_string();
-        }
-    
+        && let Some(end) = text[start + 3..].find("```")
+    {
+        let json_block = &text[start + 3..start + 3 + end];
+        // ```json 같은 언어 태그 제거
+        let json_content = if let Some(newline) = json_block.find('\n') {
+            &json_block[newline + 1..]
+        } else {
+            json_block
+        };
+        return json_content.trim().to_string();
+    }
+
     // { 로 시작하는 JSON 찾기
     if let Some(start) = text.find('{')
         && let Some(end) = text.rfind('}')
-            && end > start {
-                return text[start..=end].to_string();
-            }
-    
+        && end > start
+    {
+        return text[start..=end].to_string();
+    }
+
     // 그대로 반환
     text.to_string()
 }
