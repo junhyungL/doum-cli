@@ -93,7 +93,7 @@ install_doum() {
     # Cleanup
     rm -rf "$tmp_dir"
     
-    echo -e "${GREEN}✓ Doum CLI installed successfully!${NC}"
+    echo -e "${GREEN}Doum CLI installed successfully!${NC}"
 }
 
 # Check if install directory is in PATH
@@ -125,9 +125,9 @@ verify_installation() {
 # Main
 main() {
     echo ""
-    echo "╔═══════════════════════════════════╗"
-    echo "║   Doum CLI Installation Script   ║"
-    echo "╚═══════════════════════════════════╝"
+    echo "====================================="
+    echo "   Doum CLI Installation Script"
+    echo "====================================="
     echo ""
     
     detect_platform

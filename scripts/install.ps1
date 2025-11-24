@@ -9,19 +9,17 @@ $BinaryName = "doum.exe"
 $InstallDir = "$env:LOCALAPPDATA\Programs\doum"
 
 # Colors
-function Write-ColorOutput($ForegroundColor) {
+function Write-ColorOutput($ForegroundColor, $Message) {
     $fc = $host.UI.RawUI.ForegroundColor
     $host.UI.RawUI.ForegroundColor = $ForegroundColor
-    if ($args) {
-        Write-Output $args
-    }
+    Write-Host $Message
     $host.UI.RawUI.ForegroundColor = $fc
 }
 
-function Write-Success { Write-ColorOutput Green $args }
-function Write-Info { Write-ColorOutput Cyan $args }
-function Write-Warning { Write-ColorOutput Yellow $args }
-function Write-Error { Write-ColorOutput Red $args }
+function Write-Success($Message) { Write-ColorOutput Green $Message }
+function Write-Info($Message) { Write-ColorOutput Cyan $Message }
+function Write-Warning($Message) { Write-ColorOutput Yellow $Message }
+function Write-Error($Message) { Write-ColorOutput Red $Message }
 
 # Detect architecture
 function Get-Architecture {
@@ -73,12 +71,14 @@ function Install-Doum {
     $zipFile = Join-Path $tmpDir "$assetName.zip"
     
     Write-Info "Downloading $assetName..."
+    Write-Info "URL: $downloadUrl"
     
     try {
         Invoke-WebRequest -Uri $downloadUrl -OutFile $zipFile
     }
     catch {
         Write-Error "Failed to download: $_"
+        Write-Error "URL was: $downloadUrl"
         Remove-Item -Recurse -Force $tmpDir
         exit 1
     }
@@ -105,7 +105,7 @@ function Install-Doum {
     # Cleanup
     Remove-Item -Recurse -Force $tmpDir
     
-    Write-Success "✓ Doum CLI installed successfully!"
+    Write-Success "Doum CLI installed successfully!"
 }
 
 # Add to PATH
@@ -121,7 +121,7 @@ function Add-ToPath {
         # Update current session
         $env:Path = "$env:Path;$InstallDir"
         
-        Write-Success "✓ Added to PATH"
+        Write-Success "Added to PATH"
         Write-Warning "You may need to restart your terminal for PATH changes to take effect."
     }
     else {
@@ -147,9 +147,9 @@ function Test-Installation {
 # Main
 function Main {
     Write-Output ""
-    Write-Output "╔═══════════════════════════════════╗"
-    Write-Output "║   Doum CLI Installation Script   ║"
-    Write-Output "╚═══════════════════════════════════╝"
+    Write-Output "====================================="
+    Write-Output "   Doum CLI Installation Script"
+    Write-Output "====================================="
     Write-Output ""
     
     $arch = Get-Architecture
