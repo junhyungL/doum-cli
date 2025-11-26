@@ -1,11 +1,11 @@
-use crate::system::error::{DoumError, Result};
+use crate::system::error::{DoumError, DoumResult};
 use std::path::PathBuf;
 
 /// doum-cli의 기본 디렉터리 경로를 반환
 /// - Windows: C:\Users\{user}\AppData\Roaming\doum-cli
 /// - macOS: ~/Library/Application Support/doum-cli
 /// - Linux: ~/.config/doum-cli
-pub fn get_app_dir() -> Result<PathBuf> {
+pub fn get_app_dir() -> DoumResult<PathBuf> {
     #[cfg(target_os = "windows")]
     {
         let appdata = std::env::var("APPDATA")
@@ -38,11 +38,11 @@ pub fn get_app_dir() -> Result<PathBuf> {
 }
 
 /// 로그 디렉터리 경로를 반환
-pub fn get_log_dir() -> Result<PathBuf> {
+pub fn get_log_dir() -> DoumResult<PathBuf> {
     Ok(get_app_dir()?.join("logs"))
 }
 
 /// 설정 파일 경로를 반환
-pub fn get_config_path() -> Result<PathBuf> {
+pub fn get_config_path() -> DoumResult<PathBuf> {
     Ok(get_app_dir()?.join("config.toml"))
 }

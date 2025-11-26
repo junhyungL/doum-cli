@@ -8,26 +8,23 @@ use crate::llm::retry_with_parse;
 use crate::llm::{LLMClient, PromptBuilder, parse_suggest};
 use crate::system::Config;
 use crate::system::SystemInfo;
-use crate::system::error::Result;
+use crate::system::error::DoumResult;
 use crate::tools::execute;
 
-/// Suggest 모드 핵심 로직
-///
-/// 사용자의 요청에 대해 여러 명령 후보를 제안하고 선택받습니다.
-/// 선택된 명령은 클립보드에 복사하거나 즉시 실행할 수 있습니다.
+/// Provide command suggestions using Suggest mode
+/// Returns the selected command if copied or executed
 pub async fn handle_suggest(
     request: &str,
     client: &dyn LLMClient,
     system_info: &SystemInfo,
     config: &Config,
-) -> Result<Option<String>> {
-    // 프롬프트 빌더 생성
+) -> DoumResult<Option<String>> {
     let builder = PromptBuilder::new(system_info.clone());
 
-    // 스피너 시작
+    // Start spinner
     let spinner = create_spinner("AI is generating commands...");
 
-    // LLM 호출 및 재시도 파싱
+    // Call LLM to get suggestions
     let response = retry_with_parse(
         || {
             let request = LLMRequest {
@@ -42,7 +39,7 @@ pub async fn handle_suggest(
     )
     .await?;
 
-    // 스피너 완료
+    // End spinner
     finish_spinner(spinner, None);
 
     if response.suggestions.is_empty() {
@@ -50,14 +47,14 @@ pub async fn handle_suggest(
         return Ok(None);
     }
 
-    // 사용자 선택 받기 (dialoguer 사용)
+    // Prompt user to select action for suggested commands
     match prompt_for_command_selection(&response.suggestions)? {
         Some((index, action)) => {
             let selected = &response.suggestions[index];
 
             match action {
                 CommandAction::Copy => {
-                    // 클립보드에 복사
+                    // Copy to clipboard
                     match copy_to_clipboard(&selected.cmd) {
                         Ok(_) => {
                             println!("\n✅ Command copied to clipboard!");
@@ -72,7 +69,7 @@ pub async fn handle_suggest(
                     Ok(Some(selected.cmd.clone()))
                 }
                 CommandAction::Execute => {
-                    // 실행 확인
+                    // Execute command
                     if confirm_execution(&selected.cmd)? {
                         println!("\n▶️  Executing command...\n");
 

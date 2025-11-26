@@ -1,11 +1,11 @@
 use crate::system::config::Config;
-use crate::system::error::{DoumError, Result};
+use crate::system::error::{DoumError, DoumResult};
 use crate::system::paths::get_log_dir;
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 /// 로깅 시스템 초기화
-pub fn init_logging(config: &Config) -> Result<()> {
+pub fn init_logging(config: &Config) -> DoumResult<()> {
     if !config.logging.enabled {
         return Ok(());
     }

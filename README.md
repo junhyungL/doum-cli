@@ -10,7 +10,8 @@
 - 💬 **Ask Mode**: Get answers to technical questions
 - 🔍 **Suggest Mode**: Command suggestions with copy/execute options
 - 🎯 **Auto Mode**: LLM automatically selects the appropriate mode
-- ⚙️ **Config TUI**: Interactive configuration menu built with ratatui
+- 🔐 **Secret Management**: Secure API key storage with OS keyring
+- ⚙️ **Config Management**: Simple config commands (set/get/unset/show/reset)
 - 🌍 **Multi-Provider**: Support for OpenAI (GPT) and Anthropic (Claude)
 
 ## Quick Start
@@ -49,8 +50,15 @@ cargo install doum-cli
 ### Setup API Key
 
 ```bash
-doum config
-# LLM Settings → Providers → OpenAI → Edit API Key
+# Configure OpenAI secret (interactive)
+doum secret openai
+
+# Or set via environment variable (if keyring doesn't work)
+# PowerShell:
+$env:OPENAI_SECRET='{"api_key":"sk-..."}'
+
+# Bash/Zsh:
+export OPENAI_SECRET='{"api_key":"sk-..."}'
 ```
 
 ### Usage Examples
@@ -73,7 +81,9 @@ doum "check disk usage"
 |---------|-------------|
 | `doum ask <question>` | Ask questions and get answers |
 | `doum suggest <task>` | Get command suggestions and execute |
-| `doum config` | Manage configuration (TUI) |
+| `doum secret <provider>` | Configure API keys (openai/anthropic) |
+| `doum switch` | Switch LLM provider or model |
+| `doum config <subcommand>` | Manage configuration (show/set/get/unset/reset) |
 | `doum <input>` | Auto mode (LLM selects mode) |
 
 ## Documentation
@@ -86,7 +96,8 @@ doum "check disk usage"
 ## Tech Stack
 
 - **Language**: Rust 2024
-- **Terminal UI**: dialoguer, ratatui (config TUI)
+- **Terminal UI**: dialoguer
+- **Secret Storage**: keyring (OS-level credential store)
 - **LLM**: OpenAI GPT, Anthropic Claude
 
 ## Development

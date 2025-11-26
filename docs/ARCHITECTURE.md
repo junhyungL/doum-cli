@@ -17,7 +17,9 @@ src/
 │   ├── args.rs         # Command line arguments
 │   ├── commands.rs     # Command handlers
 │   ├── ui.rs           # User interaction (dialoguer)
-│   └── config/         # Interactive config TUI
+│   ├── secret.rs       # API key management
+│   ├── config.rs       # Config operations
+│   └── menu.rs         # Interactive menus
 ├── core/               # Business logic
 │   ├── ask.rs          # Q&A mode
 │   ├── suggest.rs      # Command suggestion mode
@@ -41,7 +43,9 @@ src/
 ### 1. CLI Layer (`cli/`)
 - **commands.rs**: Mode-specific handlers (`handle_ask_command`, `handle_suggest_command`, etc.)
 - **ui.rs**: User interaction based on dialoguer
-- **config/**: Configuration menu implemented with ratatui TUI
+- **secret.rs**: Secure API key management (OS keyring + env fallback)
+- **config.rs**: Configuration operations (set/get/unset/show/reset)
+- **menu.rs**: Interactive menus for provider/model switching
 
 ### 2. Core Logic (`core/`)
 - **ask.rs**: Provides answers to questions
@@ -50,6 +54,7 @@ src/
 
 ### 3. LLM Integration (`llm/`)
 - Provider-specific implementations (OpenAI, Anthropic)
+- Secure secret management (keyring + environment variables)
 - Streaming response support
 - Retry logic with exponential backoff
 
@@ -76,19 +81,22 @@ Output: Display result
 
 ## Configuration
 
-Config file: `~/.config/doum-cli/config.toml` (Linux/macOS) or `%APPDATA%\doum-cli\config.toml` (Windows)
+**Config file:** `~/.config/doum-cli/config.toml` (Linux/macOS) or `%APPDATA%\doum-cli\config.toml` (Windows)
 
 ```toml
 [llm]
 provider = "openai"
+model = "gpt-4"
 timeout = 30
 max_retries = 3
 
 [llm.context]
 max_lines = 100
 max_size_kb = 50
-
-[llm.providers.openai]
-api_key = "sk-..."
-model = "gpt-4"
 ```
+
+**Secrets:** Stored separately in OS keyring or environment variables
+- Windows: Credential Manager (`openai/doum-cli`)
+- macOS: Keychain
+- Linux: Secret Service
+- Fallback: `OPENAI_SECRET`, `ANTHROPIC_SECRET` environment variables

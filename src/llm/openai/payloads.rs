@@ -1,7 +1,6 @@
 use crate::llm::Message;
 use serde::{Deserialize, Serialize};
 
-/// OpenAI 프로바이더 설정
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenAIConfig {
     pub model: String,
@@ -12,7 +11,6 @@ pub struct OpenAIConfig {
     pub project: Option<String>,
 }
 
-/// OpenAI API 요청 구조체
 #[derive(Debug, Serialize)]
 pub(crate) struct OpenAIRequest {
     pub model: String,
@@ -22,20 +20,17 @@ pub(crate) struct OpenAIRequest {
     pub tools: Option<Vec<OpenAIWebSearchTool>>,
 }
 
-/// OpenAI WebSearch 지원 요청 구조체
 #[derive(Debug, Serialize)]
 pub(crate) struct OpenAIWebSearchTool {
     #[serde(rename = "type")]
     pub tool_type: String,
 }
 
-/// OpenAI API 응답 구조체
 #[derive(Debug, Deserialize)]
 pub(crate) struct OpenAIResponse {
     pub output: Vec<OpenAIOutput>,
 }
 
-/// OpenAI API 응답 출력 구조체
 #[derive(Debug, Deserialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]
@@ -58,7 +53,6 @@ pub(crate) struct OutputContent {
     pub text: String,
 }
 
-/// OpenAI API 에러 응답
 #[derive(Debug, Deserialize)]
 pub(crate) struct OpenAIError {
     pub error: ErrorDetail,

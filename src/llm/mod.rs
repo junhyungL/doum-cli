@@ -7,9 +7,9 @@ pub mod parser;
 pub mod prompt;
 pub mod retry;
 
-pub use anthropic::AnthropicConfig;
+pub use anthropic::{AnthropicClient, AnthropicConfig, AnthropicSecret};
 pub use client::{LLMClient, Message, Role, create_client};
-pub use openai::OpenAIConfig;
+pub use openai::{OpenAIClient, OpenAIConfig, OpenAISecret};
 pub use parser::{
     AskResponse, CommandSuggestion, ExecuteResponse, ModeSelectResponse, SuggestResponse,
     parse_execute, parse_mode_select, parse_suggest,

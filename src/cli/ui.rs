@@ -1,13 +1,10 @@
 use crate::llm::CommandSuggestion;
-use crate::system::error::{DoumError, Result};
+use crate::system::error::{DoumError, DoumResult};
 use arboard::Clipboard;
 use console::Style;
 use dialoguer::{Confirm, Input, Password, Select, theme::ColorfulTheme};
 use indicatif::{ProgressBar, ProgressStyle};
 use std::time::Duration;
-
-// UI module for all user interactions (ask, suggest modes)
-// Config mode uses TUI (tui.rs, menu.rs)
 
 /// Action to take after selecting a command
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -20,7 +17,7 @@ pub enum CommandAction {
 /// Enhanced command selection with dialoguer
 pub fn prompt_for_command_selection(
     suggestions: &[CommandSuggestion],
-) -> Result<Option<(usize, CommandAction)>> {
+) -> DoumResult<Option<(usize, CommandAction)>> {
     if suggestions.is_empty() {
         println!("\n⚠️  No commands to suggest.");
         return Ok(None);
@@ -77,7 +74,7 @@ pub fn prompt_for_command_selection(
 }
 
 /// Simple confirmation prompt
-pub fn confirm_execution(command: &str) -> Result<bool> {
+pub fn confirm_execution(command: &str) -> DoumResult<bool> {
     let theme = ColorfulTheme::default();
     let cmd_style = Style::new().cyan().bold();
 
@@ -91,10 +88,12 @@ pub fn confirm_execution(command: &str) -> Result<bool> {
 }
 
 /// Text input prompt
-pub fn prompt_text_input(message: &str, default: Option<&str>) -> Result<String> {
+pub fn prompt_text_input(message: &str, default: Option<&str>) -> DoumResult<String> {
     let theme = ColorfulTheme::default();
 
-    let mut input = Input::with_theme(&theme).with_prompt(message);
+    let mut input = Input::with_theme(&theme)
+        .with_prompt(message)
+        .allow_empty(true);
 
     if let Some(def) = default {
         input = input.default(def.to_string());
@@ -106,7 +105,7 @@ pub fn prompt_text_input(message: &str, default: Option<&str>) -> Result<String>
 }
 
 /// Password input prompt
-pub fn prompt_password_input(message: &str) -> Result<String> {
+pub fn prompt_password_input(message: &str) -> DoumResult<String> {
     let theme = ColorfulTheme::default();
 
     Password::with_theme(&theme)
@@ -116,7 +115,7 @@ pub fn prompt_password_input(message: &str) -> Result<String> {
 }
 
 /// Number input prompt
-pub fn prompt_number_input<T>(message: &str, default: Option<T>) -> Result<T>
+pub fn prompt_number_input<T>(message: &str, default: Option<T>) -> DoumResult<T>
 where
     T: std::str::FromStr + std::fmt::Display + Clone,
     T::Err: std::fmt::Display,
@@ -135,7 +134,7 @@ where
 }
 
 /// Copy text to clipboard
-pub fn copy_to_clipboard(text: &str) -> Result<()> {
+pub fn copy_to_clipboard(text: &str) -> DoumResult<()> {
     let mut clipboard =
         Clipboard::new().map_err(|e| DoumError::Config(format!("Clipboard init failed: {}", e)))?;
 
@@ -166,16 +165,5 @@ pub fn finish_spinner(spinner: ProgressBar, message: Option<&str>) {
         spinner.finish_with_message(msg.to_string());
     } else {
         spinner.finish_and_clear();
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_copy_to_clipboard() {
-        let result = copy_to_clipboard("test command");
-        assert!(result.is_ok() || result.is_err());
     }
 }

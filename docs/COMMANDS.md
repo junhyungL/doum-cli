@@ -30,23 +30,63 @@ doum suggest "monitor system resources"
 1. Select from suggested commands
 2. Choose: 📋 Copy, ▶️ Execute, or ❌ Cancel
 
+### `secret` - API Key Management
+Configure API keys securely using OS keyring.
+
+```bash
+# Configure OpenAI
+doum secret openai
+
+# Configure Anthropic
+doum secret anthropic
+```
+
+**Storage Priority:**
+1. OS Keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service)
+2. Environment Variable (`OPENAI_SECRET`, `ANTHROPIC_SECRET`)
+
+**Note:** Due to Windows keyring limitations, environment variables are recommended:
+```powershell
+# The secret command will output the exact command to use
+doum secret openai
+# Copy the displayed PowerShell command
+```
+
+### `switch` - Provider/Model Selection
+Interactive menu to switch LLM provider or model.
+
+```bash
+doum switch
+```
+
+**Options:**
+- Provider: OpenAI / Anthropic
+- Model: gpt-4, gpt-3.5-turbo, claude-3-5-sonnet, etc.
+
 ### `config` - Configuration Management
 
 ```bash
-# Launch interactive TUI
-doum config
+# Show all configuration
+doum config show
 
-# Show current configuration
-doum config --show
+# Set a value
+doum config set <key> <value>
 
-# Reset to default
-doum config --reset
+# Get a value
+doum config get <key>
+
+# Unset (remove) a value
+doum config unset <key>
+
+# Reset to defaults
+doum config reset
 ```
 
-**Configuration Menu (TUI):**
-- LLM Settings (timeout, retries, thinking mode, web search)
-- Provider Settings (OpenAI, Anthropic)
-- Context Settings (max lines, max size)
+**Common Keys:**
+- `llm.provider` - LLM provider (openai/anthropic)
+- `llm.model` - Model name
+- `llm.timeout` - Request timeout in seconds
+- `llm.max_retries` - Maximum retry attempts
 
 ### Auto Mode (Default)
 LLM automatically selects the appropriate mode when no command is specified.

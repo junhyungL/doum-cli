@@ -1,5 +1,5 @@
 use crate::system::env::{OsType, ShellType, SystemInfo};
-use crate::system::error::{DoumError, Result};
+use crate::system::error::{DoumError, DoumResult};
 use std::process::{Command, Output};
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ pub struct CommandOutput {
 }
 
 /// OS와 쉘에 맞게 명령 실행
-pub fn execute(command: &str, system_info: &SystemInfo) -> Result<CommandOutput> {
+pub fn execute(command: &str, system_info: &SystemInfo) -> DoumResult<CommandOutput> {
     execute_with_timeout(command, system_info, None)
 }
 
@@ -22,7 +22,7 @@ pub fn execute_with_timeout(
     command: &str,
     system_info: &SystemInfo,
     timeout: Option<Duration>,
-) -> Result<CommandOutput> {
+) -> DoumResult<CommandOutput> {
     let output = match system_info.os {
         OsType::Windows => execute_windows(command, &system_info.shell, timeout)?,
         OsType::Linux | OsType::MacOS => execute_unix(command, &system_info.shell, timeout)?,
@@ -40,7 +40,11 @@ pub fn execute_with_timeout(
 }
 
 /// Windows에서 명령 실행
-fn execute_windows(command: &str, shell: &ShellType, _timeout: Option<Duration>) -> Result<Output> {
+fn execute_windows(
+    command: &str,
+    shell: &ShellType,
+    _timeout: Option<Duration>,
+) -> DoumResult<Output> {
     let mut cmd = match shell {
         ShellType::PowerShell => {
             let mut c = Command::new("powershell.exe");
@@ -76,7 +80,11 @@ fn execute_windows(command: &str, shell: &ShellType, _timeout: Option<Duration>)
 }
 
 /// Unix 계열에서 명령 실행
-fn execute_unix(command: &str, shell: &ShellType, _timeout: Option<Duration>) -> Result<Output> {
+fn execute_unix(
+    command: &str,
+    shell: &ShellType,
+    _timeout: Option<Duration>,
+) -> DoumResult<Output> {
     let shell_path = match shell {
         ShellType::Bash => "/bin/bash",
         ShellType::Zsh => "/bin/zsh",

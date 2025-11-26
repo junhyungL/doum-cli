@@ -29,15 +29,27 @@ copy target\release\doum-cli.exe C:\Users\YourName\.cargo\bin\doum.exe
 
 **OpenAI:**
 ```bash
-doum config
-# LLM Settings → Providers → OpenAI → Edit API Key
+# Interactive setup (saves to OS keyring)
+doum secret openai
+
+# Or use environment variable (Windows)
+$env:OPENAI_SECRET='{"api_key":"sk-..."}'
+
+# Or use environment variable (Linux/macOS)
+export OPENAI_SECRET='{"api_key":"sk-..."}'
 ```
 
 **Anthropic (Claude):**
 ```bash
-doum config
-# LLM Settings → Providers → Anthropic → Edit API Key
-# LLM Settings → Provider Selection → Anthropic
+# Interactive setup
+doum secret anthropic
+
+# Switch to Anthropic provider
+doum switch
+# Select: Provider → Anthropic
+
+# Or use environment variable
+export ANTHROPIC_SECRET='{"api_key":"sk-ant-..."}'
 ```
 
 ## First Steps
@@ -89,35 +101,63 @@ doum suggest "create new branch from main"
 
 ## Configuration Tips
 
-### Response Speed Adjustment
+### View Current Configuration
 ```bash
-doum config
-# LLM Settings → Timeout → 조정 (default: 30 seconds)
+doum config show
 ```
 
-### Context Size Setting
+### Change LLM Provider or Model
 ```bash
-doum config
-# LLM Settings → Context Settings → Max Lines/Size
+doum switch
+# Interactive menu for provider/model selection
 ```
 
-### Provider Selection
+### Set Configuration Values
 ```bash
-doum config
-# LLM Settings → Provider Selection → OpenAI/Anthropic
+doum config set llm.timeout 60
+doum config set llm.max_retries 5
+```
+
+### Get Configuration Value
+```bash
+doum config get llm.provider
+doum config get llm.model
+```
+
+### Unset (Remove) Configuration
+```bash
+doum config unset llm.timeout  # Revert to default
 ```
 
 ## Troubleshooting
 
-### API Key Update
+### API Key Issues
 ```bash
-doum config --show  # 현재 설정 확인
-doum config         # API 키 재설정
+# Reconfigure API key
+doum secret openai
+
+# Or use environment variable as fallback
+$env:OPENAI_SECRET='{"api_key":"sk-..."}'
 ```
 
-### Reset Configuration
+### View Current Configuration
 ```bash
-doum config --reset
+doum config show
+```
+
+### Reset Configuration to Defaults
+```bash
+doum config reset
+```
+
+### Keyring Not Working
+If secrets don't persist, use environment variables:
+```powershell
+# PowerShell (current session)
+$env:OPENAI_SECRET='{"api_key":"sk-..."}'
+
+# PowerShell (permanent - add to profile)
+echo "$env:OPENAI_SECRET='{\"api_key\":\"sk-...\'}}"` >> $PROFILE
 ```
 
 ### Check Logs

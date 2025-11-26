@@ -1,4 +1,4 @@
-use crate::system::error::{DoumError, Result};
+use crate::system::error::{DoumError, DoumResult};
 use serde::{Deserialize, Serialize};
 
 /// 모드 선택 응답
@@ -33,7 +33,7 @@ pub struct ExecuteResponse {
 }
 
 /// 모드 선택 응답 파싱
-pub fn parse_mode_select(json_str: &str) -> Result<ModeSelectResponse> {
+pub fn parse_mode_select(json_str: &str) -> DoumResult<ModeSelectResponse> {
     // JSON 추출 시도 (markdown 코드 블록 제거)
     let cleaned = extract_json(json_str);
 
@@ -42,7 +42,7 @@ pub fn parse_mode_select(json_str: &str) -> Result<ModeSelectResponse> {
 }
 
 /// Suggest 응답 파싱
-pub fn parse_suggest(json_str: &str) -> Result<SuggestResponse> {
+pub fn parse_suggest(json_str: &str) -> DoumResult<SuggestResponse> {
     let cleaned = extract_json(json_str);
 
     serde_json::from_str(&cleaned)
@@ -50,7 +50,7 @@ pub fn parse_suggest(json_str: &str) -> Result<SuggestResponse> {
 }
 
 /// Execute 응답 파싱
-pub fn parse_execute(json_str: &str) -> Result<ExecuteResponse> {
+pub fn parse_execute(json_str: &str) -> DoumResult<ExecuteResponse> {
     let cleaned = extract_json(json_str);
 
     serde_json::from_str(&cleaned)

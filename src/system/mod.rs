@@ -7,10 +7,9 @@ pub mod logging;
 pub mod paths;
 
 pub use config::{
-    Config, ContextConfig, LLMConfig, LoggingConfig, ProviderConfig, load_config,
-    load_default_config, save_config,
+    Config, ContextConfig, LLMConfig, LoggingConfig, load_config, load_default_config, save_config,
 };
 pub use env::{OsType, ShellType, SystemInfo, detect_os, detect_shell, get_system_info};
-pub use error::{DoumError, Result};
+pub use error::{DoumError, DoumResult};
 pub use logging::init_logging;
 pub use paths::{get_app_dir, get_config_path, get_log_dir};

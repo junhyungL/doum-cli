@@ -1,6 +1,6 @@
 use clap::Parser;
 use doum_cli::cli::{Cli, Commands};
-use doum_cli::system::error::Result;
+use doum_cli::system::error::DoumResult;
 use doum_cli::system::{init_logging, load_config, load_default_config};
 
 #[tokio::main]
@@ -8,8 +8,11 @@ async fn main() {
     let exit_code = match run().await {
         Ok(_) => 0,
         Err(e) => {
-            tracing::error!("에러 발생: {}", e);
-            eprintln!("\n{}\n", e.user_message());
+            // Internal logging
+            tracing::error!("doum-cli terminated with an error: {}", e);
+
+            // User-facing error message
+            eprintln!("\n[Error] {}\n", e.user_message());
             1
         }
     };
@@ -17,49 +20,65 @@ async fn main() {
     std::process::exit(exit_code);
 }
 
-async fn run() -> Result<()> {
+async fn run() -> DoumResult<()> {
     let cli = Cli::parse();
 
-    // 설정 로드
+    // Load configuration
     let config = load_config().unwrap_or_else(|e| {
-        eprintln!("⚠️  Failed to load config: {}. Using default config.", e);
-        load_default_config().expect("Failed to load default config")
+        eprintln!(
+            "⚠️  Failed to load configuration: {}. Falling back to default configuration.",
+            e
+        );
+        load_default_config().expect("Failed to load default configuration")
     });
 
-    // 로깅 초기화
+    // Initialize logging
     if let Err(e) = init_logging(&config) {
-        eprintln!("⚠️  Failed to initialize logging: {}", e);
+        eprintln!(
+            "⚠️  Failed to initialize logging: {}. Continuing without logging.",
+            e
+        );
     }
 
-    tracing::info!("starting doum-cli");
+    tracing::info!("Starting doum-cli");
 
     let result = match cli.command {
         Some(Commands::Config { action }) => {
-            tracing::info!("Exec Config command");
+            tracing::info!("Running 'config' command");
             doum_cli::cli::handle_config_command(action)?;
             Ok(())
         }
+        Some(Commands::Secret { provider }) => {
+            tracing::info!("Running 'secret' command");
+            doum_cli::cli::handle_secret_command(provider)?;
+            Ok(())
+        }
+        Some(Commands::Switch { provider, model }) => {
+            tracing::info!("Running 'switch' command");
+            doum_cli::cli::handle_switch_command(provider, model)?;
+            Ok(())
+        }
         Some(Commands::Ask { question }) => {
-            tracing::info!("Exec Ask mode: {}", question);
+            tracing::info!("Running 'ask' command with question: {}", question);
             doum_cli::cli::handle_ask_command(&question).await
         }
         Some(Commands::Suggest { request }) => {
-            tracing::info!("Exec Suggest mode: {}", request);
+            tracing::info!("Running 'suggest' command with request: {}", request);
             doum_cli::cli::handle_suggest_command(&request).await
         }
         None => {
             if let Some(input) = cli.input {
-                tracing::info!("Exec Auto mode: {}", input);
+                tracing::info!("Running 'auto' mode with input: {}", input);
                 doum_cli::cli::handle_auto_command(&input).await
             } else {
-                // 인자가 없다면 커맨드 설명
-                tracing::info!("명령어 인자 없음 - 도움말 출력");
+                // No arguments: show help and exit
+                tracing::info!("doum-cli invoked without arguments. Showing help and exiting.");
                 Cli::parse_from(["doum-cli", "--help"]);
                 Ok(())
             }
         }
     };
 
-    tracing::info!("doum-cli 정상 종료");
+    tracing::info!("Shutting down doum-cli");
     result
 }

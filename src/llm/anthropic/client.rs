@@ -2,23 +2,23 @@ use crate::llm::anthropic::payloads::{
     AnthropicConfig, AnthropicError, AnthropicRequest, AnthropicResponse,
 };
 use crate::llm::client::{LLMClient, LLMRequest};
-use crate::system::error::{DoumError, Result};
+use crate::system::error::{DoumError, DoumResult};
 use reqwest::Client;
 use std::time::Duration;
 
-/// Anthropic 클라이언트
+/// Anthropic LLM Client
 pub struct AnthropicClient {
     http_client: Client,
     config: AnthropicConfig,
 }
 
 impl AnthropicClient {
-    /// Anthropic API 엔드포인트
+    /// Anthropic API URL and Version
     const API_URL: &'static str = "https://api.anthropic.com/v1/messages";
     const API_VERSION: &'static str = "2023-06-01";
 
-    /// 새 Anthropic 클라이언트 생성
-    pub fn new(config: AnthropicConfig, timeout: u64) -> Result<Self> {
+    /// Create a new AnthropicClient
+    pub fn new(config: AnthropicConfig, timeout: u64) -> DoumResult<Self> {
         if config.api_key.is_empty() {
             return Err(DoumError::InvalidConfig(
                 "Anthropic API key is not set. Please configure it in the interactive config menu (doum config).".to_string()
@@ -28,7 +28,7 @@ impl AnthropicClient {
         let http_client = Client::builder()
             .timeout(Duration::from_secs(timeout))
             .build()
-            .map_err(|e| DoumError::LLM(format!("HTTP 클라이언트 생성 실패: {}", e)))?;
+            .map_err(|e| DoumError::LLM(format!("Failed to build HTTP client: {}", e)))?;
 
         Ok(Self {
             http_client,
@@ -39,8 +39,7 @@ impl AnthropicClient {
 
 #[async_trait::async_trait]
 impl LLMClient for AnthropicClient {
-    async fn generate(&self, request: LLMRequest) -> Result<String> {
-        // 요청 본문 구성
+    async fn generate(&self, request: LLMRequest) -> DoumResult<String> {
         let request_body = AnthropicRequest {
             model: self.config.model.clone(),
             system: Some(request.system),
@@ -48,7 +47,6 @@ impl LLMClient for AnthropicClient {
             max_tokens: 4096,
         };
 
-        // API 요청
         let response = self
             .http_client
             .post(Self::API_URL)
@@ -62,46 +60,46 @@ impl LLMClient for AnthropicClient {
                 if e.is_timeout() {
                     DoumError::Timeout
                 } else if e.is_connect() {
-                    DoumError::LLM("네트워크 연결 실패. 인터넷 연결을 확인하세요.".to_string())
+                    DoumError::LLM("Failed to connect to Anthropic API".to_string())
                 } else {
-                    DoumError::LLM(format!("API 요청 실패: {}", e))
+                    DoumError::LLM(format!("Failed to send request to Anthropic API: {}", e))
                 }
             })?;
 
-        // HTTP 상태 코드 확인
+        // Check response status
         let status = response.status();
 
         if !status.is_success() {
             let error_text = response
                 .text()
                 .await
-                .unwrap_or_else(|_| "알 수 없는 에러".to_string());
+                .unwrap_or_else(|_| "Unknown error".to_string());
 
-            // Anthropic 에러 응답 파싱 시도
+            // Try to parse Anthropic error format
             if let Ok(anthropic_error) = serde_json::from_str::<AnthropicError>(&error_text) {
                 return Err(DoumError::LLM(format!(
-                    "Anthropic API 에러 ({}): {}",
+                    "Anthropic API Error ({}): {}",
                     status, anthropic_error.error.message
                 )));
             }
 
             return Err(DoumError::LLM(format!(
-                "API 요청 실패 ({}): {}",
+                "Anthropic API Error: {} - {}",
                 status, error_text
             )));
         }
 
-        // 응답 파싱
+        // Parse response body
         let anthropic_response: AnthropicResponse = response
             .json()
             .await
-            .map_err(|e| DoumError::Parse(format!("API 응답 파싱 실패: {}", e)))?;
+            .map_err(|e| DoumError::Parse(format!("Failed to parse Anthropic response: {}", e)))?;
 
-        // 첫 번째 content block의 text 추출
+        // Extract and return the generated content
         anthropic_response
             .content
             .first()
             .map(|block| block.text.clone())
-            .ok_or_else(|| DoumError::Parse("API 응답에 컨텐츠가 없습니다".to_string()))
+            .ok_or_else(|| DoumError::Parse("No content in Anthropic response".to_string()))
     }
 }

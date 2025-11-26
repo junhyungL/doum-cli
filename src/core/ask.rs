@@ -4,34 +4,30 @@ use crate::llm::client::LLMRequest;
 use crate::llm::{LLMClient, PromptBuilder};
 use crate::system::Config;
 use crate::system::SystemInfo;
-use crate::system::error::Result;
+use crate::system::error::DoumResult;
 
-/// Ask 모드 핵심 로직
-///
-/// 사용자의 질문에 대해 LLM이 답변을 제공합니다.
+/// Provide answer of the question using Ask mode
 pub async fn handle_ask(
     question: &str,
     client: &dyn LLMClient,
     system_info: &SystemInfo,
     _config: &Config,
-) -> Result<()> {
-    // 프롬프트 빌더 생성
+) -> DoumResult<()> {
     let builder = PromptBuilder::new(system_info.clone());
 
-    // Ask 모드용 메시지 생성
     let request = LLMRequest {
         system: builder.build_ask(),
         messages: vec![Message::user(question)],
-        use_websearch: true,
+        use_websearch: _config.llm.use_web_search,
     };
 
-    // 스피너 시작
+    // Start spinner
     let spinner = create_spinner("AI is generating an answer...");
 
-    // LLM 호출
+    // Generate response
     let response = client.generate(request).await?;
 
-    // 스피너 완료
+    // End spinner
     finish_spinner(spinner, None);
 
     // 응답 출력

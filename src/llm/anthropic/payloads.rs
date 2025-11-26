@@ -1,13 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-/// Anthropic 프로바이더 설정
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnthropicConfig {
     pub model: String,
     pub api_key: String,
 }
 
-/// Anthropic API 요청 구조체
 #[derive(Debug, Serialize)]
 pub(crate) struct AnthropicRequest {
     pub model: String,
@@ -17,7 +15,6 @@ pub(crate) struct AnthropicRequest {
     pub max_tokens: u32,
 }
 
-/// Anthropic API 응답 구조체
 #[derive(Debug, Deserialize)]
 pub(crate) struct AnthropicResponse {
     pub content: Vec<ContentBlock>,
@@ -31,7 +28,6 @@ pub(crate) struct ContentBlock {
     pub text: String,
 }
 
-/// Anthropic API 에러 응답
 #[derive(Debug, Deserialize)]
 pub(crate) struct AnthropicError {
     pub error: ErrorDetail,
