@@ -46,18 +46,6 @@ GitHub Actions will automatically:
 3. Upload binaries and checksums
 4. Publish to crates.io (if configured)
 
-## Future Distribution Channels
-
-### Windows
-- [ ] winget (Windows Package Manager)
-
-### macOS
-- [ ] Homebrew
-
-### Linux
-- [ ] APT (Debian/Ubuntu)
-- [ ] YUM/DNF (RHEL/Fedora)
-
 ## Configuration Requirements
 
 ### GitHub Secrets (for crates.io publishing)
@@ -65,7 +53,7 @@ GitHub Actions will automatically:
 Configure in Repository Settings → Secrets and variables → Actions:
 
 - `CARGO_REGISTRY_TOKEN`: crates.io API token
-  - Generate at https://crates.io/settings/tokens
+- Generate at https://crates.io/settings/tokens
 
 ### Version Management
 
@@ -83,8 +71,11 @@ git tag v0.1.0     # Should match this tag
 ## Release Checklist
 
 - [ ] Update `Cargo.toml` version
+- [ ] Update `cli/args.rs` version constant
 - [ ] Update `CHANGELOG.md`
-- [ ] Complete local testing
+- [ ] Run `cargo test` and ensure all tests pass
+- [ ] Run `cargo clippy -- -D warnings` and fix issues
+- [ ] Run `cargo fmt -- --check` and format code
 - [ ] Commit and push to `main` branch
 - [ ] Create and push version tag
 - [ ] Verify GitHub Actions workflow
@@ -104,3 +95,15 @@ git tag v0.1.0     # Should match this tag
 ### Installation Script Errors
 - Verify GitHub Release was created
 - Confirm binary name matches (`doum` vs `doum.exe`)
+
+## Future Distribution Channels
+
+### Windows
+- [ ] winget (Windows Package Manager)
+
+### macOS
+- [ ] Homebrew
+
+### Linux
+- [ ] APT (Debian/Ubuntu)
+- [ ] YUM/DNF (RHEL/Fedora)

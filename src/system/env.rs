@@ -1,7 +1,7 @@
 use std::env;
 use std::path::PathBuf;
 
-/// OS 타입
+/// Supported operating system
 #[derive(Debug, Clone, PartialEq)]
 pub enum OsType {
     Windows,
@@ -9,7 +9,17 @@ pub enum OsType {
     MacOS,
 }
 
-/// 쉘 타입
+impl OsType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            OsType::Windows => "Windows",
+            OsType::Linux => "Linux",
+            OsType::MacOS => "macOS",
+        }
+    }
+}
+
+/// Supported shell types
 #[derive(Debug, Clone, PartialEq)]
 pub enum ShellType {
     Cmd,
@@ -20,7 +30,20 @@ pub enum ShellType {
     Unknown,
 }
 
-/// 시스템 정보
+impl ShellType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            ShellType::Cmd => "cmd.exe",
+            ShellType::PowerShell => "PowerShell",
+            ShellType::Bash => "bash",
+            ShellType::Zsh => "zsh",
+            ShellType::Fish => "fish",
+            ShellType::Unknown => "unknown",
+        }
+    }
+}
+
+/// System information structure
 #[derive(Debug, Clone)]
 pub struct SystemInfo {
     pub os: OsType,
@@ -30,7 +53,20 @@ pub struct SystemInfo {
     pub hostname: Option<String>,
 }
 
-/// 현재 시스템 정보 수집
+impl SystemInfo {
+    pub fn display(&self) -> String {
+        format!(
+            "OS: {}\nShell: {}\nCurrent Dir: {}\nUsername: {}\nHostname: {}",
+            self.os.as_str(),
+            self.shell.as_str(),
+            self.current_dir.display(),
+            self.username.as_deref().unwrap_or("(unknown)"),
+            self.hostname.as_deref().unwrap_or("(unknown)")
+        )
+    }
+}
+
+/// Get current system information
 pub fn get_system_info() -> SystemInfo {
     SystemInfo {
         os: detect_os(),
@@ -43,7 +79,7 @@ pub fn get_system_info() -> SystemInfo {
     }
 }
 
-/// OS 타입 감지
+/// Detect operating system
 pub fn detect_os() -> OsType {
     #[cfg(target_os = "windows")]
     return OsType::Windows;
@@ -58,25 +94,26 @@ pub fn detect_os() -> OsType {
     return OsType::Linux; // 기본값
 }
 
-/// 현재 쉘 감지
+/// Detect shell type
 pub fn detect_shell() -> ShellType {
-    // Windows에서는 ComSpec 환경 변수 확인
     if cfg!(target_os = "windows") {
+        // Check COMSPEC on Windows
         if let Ok(comspec) = env::var("COMSPEC")
             && comspec.to_lowercase().contains("cmd.exe")
         {
             return ShellType::Cmd;
         }
 
-        // PSModulePath가 있으면 PowerShell
+        // if PSModulePath exists, it's likely PowerShell
         if env::var("PSModulePath").is_ok() {
             return ShellType::PowerShell;
         }
 
-        return ShellType::Cmd; // Windows 기본값
+        // Windows Default
+        return ShellType::Cmd;
     }
 
-    // Unix 계열에서는 SHELL 환경 변수 확인
+    // Check SHELL variable on Unix-like systems
     if let Ok(shell) = env::var("SHELL") {
         let shell_lower = shell.to_lowercase();
 
@@ -93,43 +130,4 @@ pub fn detect_shell() -> ShellType {
     // 실제로는 더 정교한 감지가 필요할 수 있음
 
     ShellType::Unknown
-}
-
-impl OsType {
-    /// OS 이름 문자열 반환
-    pub fn as_str(&self) -> &str {
-        match self {
-            OsType::Windows => "Windows",
-            OsType::Linux => "Linux",
-            OsType::MacOS => "macOS",
-        }
-    }
-}
-
-impl ShellType {
-    /// 쉘 이름 문자열 반환
-    pub fn as_str(&self) -> &str {
-        match self {
-            ShellType::Cmd => "cmd.exe",
-            ShellType::PowerShell => "PowerShell",
-            ShellType::Bash => "bash",
-            ShellType::Zsh => "zsh",
-            ShellType::Fish => "fish",
-            ShellType::Unknown => "unknown",
-        }
-    }
-}
-
-impl SystemInfo {
-    /// 시스템 정보를 사람이 읽기 쉬운 형태로 출력
-    pub fn display(&self) -> String {
-        format!(
-            "OS: {}\nShell: {}\nCurrent Dir: {}\nUsername: {}\nHostname: {}",
-            self.os.as_str(),
-            self.shell.as_str(),
-            self.current_dir.display(),
-            self.username.as_deref().unwrap_or("(unknown)"),
-            self.hostname.as_deref().unwrap_or("(unknown)")
-        )
-    }
 }

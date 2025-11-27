@@ -4,13 +4,13 @@ use crate::system::paths::get_log_dir;
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
-/// 로깅 시스템 초기화
+/// Initialize logging system
 pub fn init_logging(config: &Config) -> DoumResult<()> {
     if !config.logging.enabled {
         return Ok(());
     }
 
-    // 로그 레벨 설정
+    // Set log level
     let level = match config.logging.level.as_str() {
         "debug" => "debug",
         "info" => "info",
@@ -22,23 +22,23 @@ pub fn init_logging(config: &Config) -> DoumResult<()> {
     let filter = EnvFilter::try_new(format!("doum_cli={}", level))
         .unwrap_or_else(|_| EnvFilter::new("info"));
 
-    // 로그 디렉터리 경로 가져오기
+    // Get log directory path
     let log_dir = get_log_dir()?;
 
-    // 로그 디렉터리 생성
+    // Create log directory if it doesn't exist
     if !log_dir.exists() {
         std::fs::create_dir_all(&log_dir)
-            .map_err(|e| DoumError::Config(format!("로그 디렉터리 생성 실패: {}", e)))?;
+            .map_err(|e| DoumError::Config(format!("Failed to create log directory: {}", e)))?;
     }
 
-    // 파일 appender 설정 (일별 로테이션, {날짜}.log 형식)
+    // Set up rolling file appender (daily rotation)
     let file_appender = RollingFileAppender::builder()
         .rotation(Rotation::DAILY)
         .filename_suffix("log")
         .build(&log_dir)
-        .map_err(|e| DoumError::Config(format!("로그 파일 생성 실패: {}", e)))?;
+        .map_err(|e| DoumError::Config(format!("Failed to create log file appender: {}", e)))?;
 
-    // Subscriber 설정
+    // Initialize tracing subscriber
     tracing_subscriber::registry()
         .with(filter)
         .with(
@@ -48,8 +48,10 @@ pub fn init_logging(config: &Config) -> DoumResult<()> {
                 .with_target(false),
         )
         .try_init()
-        .map_err(|e| DoumError::Config(format!("로깅 초기화 실패: {}", e)))?;
+        .map_err(|e| {
+            DoumError::Config(format!("Failed to initialize logging subscriber: {}", e))
+        })?;
 
-    tracing::info!("로깅 시스템 초기화 완료 (레벨: {})", level);
+    tracing::info!("Configured logging with level: {}", level);
     Ok(())
 }

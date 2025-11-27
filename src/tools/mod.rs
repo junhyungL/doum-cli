@@ -2,4 +2,4 @@
 
 pub mod executor;
 
-pub use executor::{CommandOutput, execute, execute_with_timeout};
+pub use executor::{CommandOutput, execute_command};

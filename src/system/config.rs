@@ -7,7 +7,7 @@ use std::path::PathBuf;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
-/// 전체 설정 구조
+/// Entire application configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub llm: LLMConfig,
@@ -15,7 +15,7 @@ pub struct Config {
     pub logging: LoggingConfig,
 }
 
-/// LLM 관련 설정
+/// Configuration for LLM API
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LLMConfig {
     pub provider: String,
@@ -26,21 +26,21 @@ pub struct LLMConfig {
     pub use_web_search: bool,
 }
 
-/// 컨텍스트 수집 설정
+/// Context management settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContextConfig {
     pub max_lines: usize,
     pub max_size_kb: usize,
 }
 
-/// 로깅 설정
+/// Configuration for logging
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoggingConfig {
     pub enabled: bool,
     pub level: String,
 }
 
-/// 설정 디렉터리 생성 및 권한 설정
+/// Ensure configuration directory and return config file path
 fn ensure_config() -> DoumResult<PathBuf> {
     let config_path = get_config_path()?;
 
@@ -48,49 +48,51 @@ fn ensure_config() -> DoumResult<PathBuf> {
         && !parent.exists()
     {
         fs::create_dir_all(parent)
-            .map_err(|e| DoumError::Config(format!("설정 디렉터리 생성 실패: {}", e)))?;
+            .map_err(|e| DoumError::Config(format!("Failed to create config directory: {}", e)))?;
 
-        // Unix 시스템에서 디렉터리 권한 설정 (700)
+        // Set directory permissions to 700 on Unix
         #[cfg(unix)]
         {
-            let metadata = fs::metadata(parent)
-                .map_err(|e| DoumError::Config(format!("디렉터리 메타데이터 읽기 실패: {}", e)))?;
+            let metadata = fs::metadata(parent).map_err(|e| {
+                DoumError::Config(format!("Failed to read directory metadata: {}", e))
+            })?;
             let mut permissions = metadata.permissions();
             permissions.set_mode(0o700);
-            fs::set_permissions(parent, permissions)
-                .map_err(|e| DoumError::Config(format!("디렉터리 권한 설정 실패: {}", e)))?;
+            fs::set_permissions(parent, permissions).map_err(|e| {
+                DoumError::Config(format!("Failed to set directory permissions: {}", e))
+            })?;
         }
     }
 
     Ok(config_path)
 }
 
-/// 설정 파일 로드 (없으면 기본값으로 생성)
+/// load configuration from file or create default
 pub fn load_config() -> DoumResult<Config> {
     let config_path = ensure_config()?;
 
     if config_path.exists() {
-        // 권한 검증
+        // Validate file permissions
         validate_config(&config_path)?;
 
-        // 설정 파일 읽기
+        // Read file content
         let content = fs::read_to_string(&config_path)
-            .map_err(|e| DoumError::Config(format!("설정 파일 읽기 실패: {}", e)))?;
+            .map_err(|e| DoumError::Config(format!("Failed to read config file: {}", e)))?;
 
-        // TOML 파싱
+        // Parse TOML content
         let config: Config = toml::from_str(&content)
-            .map_err(|e| DoumError::Config(format!("설정 파일 파싱 실패: {}", e)))?;
+            .map_err(|e| DoumError::Config(format!("Failed to parse config file: {}", e)))?;
 
         Ok(config)
     } else {
-        // 임베드된 기본 config.toml을 로드하여 저장
+        // If config file doesn't exist, create default
         let config = load_default_config()?;
         save_config(&config)?;
         Ok(config)
     }
 }
 
-/// 임베드된 기본 config.toml 로드
+/// Load default configuration
 pub fn load_default_config() -> DoumResult<Config> {
     Ok(Config {
         llm: LLMConfig {
@@ -112,40 +114,40 @@ pub fn load_default_config() -> DoumResult<Config> {
     })
 }
 
-/// 설정 파일 저장
+/// Save configuration to file with secure permissions
 pub fn save_config(config: &Config) -> DoumResult<()> {
     let config_path = ensure_config()?;
 
-    // TOML로 직렬화
+    // Serialize configuration to TOML
     let content = toml::to_string_pretty(config)
-        .map_err(|e| DoumError::Config(format!("설정 직렬화 실패: {}", e)))?;
+        .map_err(|e| DoumError::Config(format!("Failed to serialize config: {}", e)))?;
 
-    // 파일 쓰기
+    // Write to file
     fs::write(&config_path, content)
-        .map_err(|e| DoumError::Config(format!("설정 파일 쓰기 실패: {}", e)))?;
+        .map_err(|e| DoumError::Config(format!("Failed to write config file: {}", e)))?;
 
-    // Windows에서는 기본 ACL 사용
+    // if Windows, set ACLs for the user only
     #[cfg(windows)]
     {
         // Windows의 경우 기본 ACL이 이미 적절하게 설정되어 있음
         // 추가 보안이 필요한 경우 winapi를 사용하여 ACL 설정 가능
     }
 
-    // Unix에서 파일 권한 설정 (600)
+    // if Unix, set file permissions to 600
     #[cfg(unix)]
     {
         let metadata = fs::metadata(&config_path)
-            .map_err(|e| DoumError::Config(format!("파일 메타데이터 읽기 실패: {}", e)))?;
+            .map_err(|e| DoumError::Config(format!("File metadata read failed: {}", e)))?;
         let mut permissions = metadata.permissions();
         permissions.set_mode(0o600);
         fs::set_permissions(&config_path, permissions)
-            .map_err(|e| DoumError::Config(format!("파일 권한 설정 실패: {}", e)))?;
+            .map_err(|e| DoumError::Config(format!("Failed to set file permissions: {}", e)))?;
     }
 
     Ok(())
 }
 
-/// 설정 파일 권한 검증
+/// Validate configuration file permissions
 fn validate_config(path: &PathBuf) -> DoumResult<()> {
     #[cfg(windows)]
     {
@@ -157,15 +159,14 @@ fn validate_config(path: &PathBuf) -> DoumResult<()> {
     #[cfg(unix)]
     {
         let metadata = fs::metadata(path)
-            .map_err(|e| DoumError::Config(format!("파일 메타데이터 읽기 실패: {}", e)))?;
+            .map_err(|e| DoumError::Config(format!("Failed to read file metadata: {}", e)))?;
         let permissions = metadata.permissions();
         let mode = permissions.mode() & 0o777;
 
-        // 600 또는 400 권한만 허용
+        // Check if permissions are 600 or 400
         if mode != 0o600 && mode != 0o400 {
             return Err(DoumError::InvalidConfig(format!(
-                "설정 파일 권한이 안전하지 않습니다 (현재: {:o}, 필요: 600 또는 400). \
-                    다음 명령으로 수정하세요: chmod 600 {}",
+                "Insecure config file permissions: {:o} on {}. Expected 600 or 400.",
                 mode,
                 path.display()
             )));

@@ -1,72 +1,54 @@
 use crate::system::error::{DoumError, DoumResult};
 use serde::{Deserialize, Serialize};
 
-/// 모드 선택 응답
+/// Select Mode Response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModeSelectResponse {
     pub mode: String,
     pub reason: String,
 }
 
-/// Ask 모드 응답 (단순 문자열)
+/// Ask Mode Response
 pub type AskResponse = String;
 
-/// 명령 제안
+/// Command Suggestion
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommandSuggestion {
     pub cmd: String,
     pub description: String,
 }
 
-/// Suggest 모드 응답
+/// Suggest Mode Response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SuggestResponse {
     pub suggestions: Vec<CommandSuggestion>,
 }
 
-/// Execute 모드 응답
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExecuteResponse {
-    pub command: String,
-    pub description: String,
-    pub is_dangerous: bool,
-}
-
-/// 모드 선택 응답 파싱
+/// parse Mode Select response
 pub fn parse_mode_select(json_str: &str) -> DoumResult<ModeSelectResponse> {
-    // JSON 추출 시도 (markdown 코드 블록 제거)
     let cleaned = extract_json(json_str);
 
     serde_json::from_str(&cleaned)
-        .map_err(|e| DoumError::Parse(format!("모드 선택 응답 파싱 실패: {}", e)))
+        .map_err(|e| DoumError::Parse(format!("Failed to parse Mode Select response: {}", e)))
 }
 
-/// Suggest 응답 파싱
+/// parse Suggest response
 pub fn parse_suggest(json_str: &str) -> DoumResult<SuggestResponse> {
     let cleaned = extract_json(json_str);
 
     serde_json::from_str(&cleaned)
-        .map_err(|e| DoumError::Parse(format!("Suggest 응답 파싱 실패: {}", e)))
+        .map_err(|e| DoumError::Parse(format!("Failed to parse Suggest response: {}", e)))
 }
 
-/// Execute 응답 파싱
-pub fn parse_execute(json_str: &str) -> DoumResult<ExecuteResponse> {
-    let cleaned = extract_json(json_str);
-
-    serde_json::from_str(&cleaned)
-        .map_err(|e| DoumError::Parse(format!("Execute 응답 파싱 실패: {}", e)))
-}
-
-/// JSON 추출 (markdown 코드 블록이나 불필요한 텍스트 제거)
+/// Extract JSON content from text (handles code blocks and surrounding text)
 fn extract_json(text: &str) -> String {
     let text = text.trim();
 
-    // ```json ... ``` 또는 ``` ... ``` 형식 처리
+    // ```json ... ``` or ``` ... ```
     if let Some(start) = text.find("```")
         && let Some(end) = text[start + 3..].find("```")
     {
         let json_block = &text[start + 3..start + 3 + end];
-        // ```json 같은 언어 태그 제거
         let json_content = if let Some(newline) = json_block.find('\n') {
             &json_block[newline + 1..]
         } else {
@@ -75,7 +57,7 @@ fn extract_json(text: &str) -> String {
         return json_content.trim().to_string();
     }
 
-    // { 로 시작하는 JSON 찾기
+    // Find first { ... } block
     if let Some(start) = text.find('{')
         && let Some(end) = text.rfind('}')
         && end > start
@@ -83,7 +65,7 @@ fn extract_json(text: &str) -> String {
         return text[start..=end].to_string();
     }
 
-    // 그대로 반환
+    // Return original text if no JSON found
     text.to_string()
 }
 
@@ -123,27 +105,6 @@ mod tests {
         let result = parse_suggest(json).unwrap();
         assert_eq!(result.suggestions.len(), 2);
         assert_eq!(result.suggestions[0].cmd, "ls -la");
-    }
-
-    #[test]
-    fn test_parse_execute() {
-        let json = r#"
-{
-  "command": "echo hello",
-  "description": "hello 출력",
-  "is_dangerous": false
-}
-        "#;
-        let result = parse_execute(json).unwrap();
-        assert_eq!(result.command, "echo hello");
-        assert!(!result.is_dangerous);
-    }
-
-    #[test]
-    fn test_parse_execute_dangerous() {
-        let json = r#"{"command":"rm -rf /","description":"위험","is_dangerous":true}"#;
-        let result = parse_execute(json).unwrap();
-        assert!(result.is_dangerous);
     }
 
     #[test]

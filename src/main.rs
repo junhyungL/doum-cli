@@ -1,5 +1,8 @@
 use clap::Parser;
-use doum_cli::cli::{Cli, Commands};
+use doum_cli::cli::{
+    Cli, Commands, handle_ask_command, handle_auto_command, handle_config_command,
+    handle_secret_command, handle_suggest_command, handle_switch_command,
+};
 use doum_cli::system::error::DoumResult;
 use doum_cli::system::{init_logging, load_config, load_default_config};
 
@@ -45,35 +48,35 @@ async fn run() -> DoumResult<()> {
     let result = match cli.command {
         Some(Commands::Config { action }) => {
             tracing::info!("Running 'config' command");
-            doum_cli::cli::handle_config_command(action)?;
+            handle_config_command(action)?;
             Ok(())
         }
         Some(Commands::Secret { provider }) => {
             tracing::info!("Running 'secret' command");
-            doum_cli::cli::handle_secret_command(provider)?;
+            handle_secret_command(provider)?;
             Ok(())
         }
         Some(Commands::Switch { provider, model }) => {
             tracing::info!("Running 'switch' command");
-            doum_cli::cli::handle_switch_command(provider, model)?;
+            handle_switch_command(provider, model)?;
             Ok(())
         }
         Some(Commands::Ask { question }) => {
             tracing::info!("Running 'ask' command with question: {}", question);
-            doum_cli::cli::handle_ask_command(&question).await
+            handle_ask_command(&question).await
         }
         Some(Commands::Suggest { request }) => {
             tracing::info!("Running 'suggest' command with request: {}", request);
-            doum_cli::cli::handle_suggest_command(&request).await
+            handle_suggest_command(&request).await
         }
         None => {
             if let Some(input) = cli.input {
                 tracing::info!("Running 'auto' mode with input: {}", input);
-                doum_cli::cli::handle_auto_command(&input).await
+                handle_auto_command(&input).await
             } else {
                 // No arguments: show help and exit
                 tracing::info!("doum-cli invoked without arguments. Showing help and exiting.");
-                Cli::parse_from(["doum-cli", "--help"]);
+                Cli::parse_from(["doum", "--help"]);
                 Ok(())
             }
         }

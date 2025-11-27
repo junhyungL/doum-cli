@@ -1,64 +1,12 @@
 use crate::cli::ui::prompt_text_input;
+use crate::llm::load_presets;
 use crate::system::DoumError::Config;
 use crate::system::error::DoumResult;
 use crate::system::{load_config, save_config};
 use dialoguer::Select;
-use rust_embed::RustEmbed;
-use serde::Deserialize;
-
-#[derive(RustEmbed)]
-#[folder = "static/presets/"]
-struct ModelPresets;
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct ModelInfo {
-    pub id: String,
-    pub name: String,
-    pub description: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct ModelList {
-    models: Vec<ModelInfo>,
-}
-
-/// Load model presets for a provider
-pub fn load_presets(provider: &str) -> Vec<ModelInfo> {
-    let filename = format!("{}.toml", provider);
-
-    if let Some(content) = ModelPresets::get(&filename)
-        && let Ok(data) = std::str::from_utf8(content.data.as_ref())
-        && let Ok(list) = toml::from_str::<ModelList>(data)
-    {
-        return list.models;
-    }
-
-    vec![]
-}
-
-pub fn handle_switch_command(provider: Option<String>, model: Option<String>) -> DoumResult<()> {
-    match (provider, model) {
-        // doum switch openai gpt-5
-        (Some(prov), Some(mdl)) => {
-            switch_provider_and_model(&prov, &mdl)?;
-        }
-        // doum interactive selection
-        (None, None) => {
-            select_provider_and_model()?;
-        }
-        // doum switch openai (invalid)
-        _ => {
-            return Err(Config(
-                "Usage: doum switch [provider] [model] or just doum switch".to_string(),
-            ));
-        }
-    }
-
-    Ok(())
-}
 
 /// Interactive provider/model selection
-fn select_provider_and_model() -> DoumResult<()> {
+pub fn select_provider_and_model() -> DoumResult<()> {
     let providers = vec!["openai", "anthropic"];
 
     // Build menu items
@@ -105,7 +53,7 @@ fn select_provider_and_model() -> DoumResult<()> {
 }
 
 /// Switch provider and model
-fn switch_provider_and_model(provider: &str, model: &str) -> DoumResult<()> {
+pub fn switch_provider_and_model(provider: &str, model: &str) -> DoumResult<()> {
     let mut config = load_config()?;
 
     // Validate provider
@@ -118,10 +66,8 @@ fn switch_provider_and_model(provider: &str, model: &str) -> DoumResult<()> {
 
     config.llm.provider = provider.to_string();
     config.llm.model = model.to_string();
-
     save_config(&config)?;
 
     println!("✅ Switched to {} - {}", provider, model);
-
     Ok(())
 }

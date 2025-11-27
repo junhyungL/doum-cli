@@ -9,7 +9,7 @@ use crate::llm::{LLMClient, PromptBuilder, parse_suggest};
 use crate::system::Config;
 use crate::system::SystemInfo;
 use crate::system::error::DoumResult;
-use crate::tools::execute;
+use crate::tools::execute_command;
 
 /// Provide command suggestions using Suggest mode
 /// Returns the selected command if copied or executed
@@ -73,7 +73,7 @@ pub async fn handle_suggest(
                     if confirm_execution(&selected.cmd)? {
                         println!("\n▶️  Executing command...\n");
 
-                        match execute(&selected.cmd, system_info) {
+                        match execute_command(&selected.cmd, system_info, None) {
                             Ok(output) => {
                                 let stdout = String::from_utf8_lossy(&output.stdout);
                                 let stderr = String::from_utf8_lossy(&output.stderr);

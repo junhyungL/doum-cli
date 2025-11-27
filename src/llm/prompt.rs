@@ -3,19 +3,19 @@ use handlebars::Handlebars;
 use rust_embed::RustEmbed;
 use serde_json::json;
 
-/// 프롬프트 정적 파일 임베딩
+/// Embed prompt assets
 #[derive(RustEmbed)]
 #[folder = "static/prompts/"]
 struct PromptAssets;
 
-/// 프롬프트 빌더
+/// Prompt builder structure
 pub struct PromptBuilder {
     system_info: SystemInfo,
     handlebars: Handlebars<'static>,
 }
 
 impl PromptBuilder {
-    /// 새 프롬프트 빌더 생성
+    /// Create new PromptBuilder
     pub fn new(system_info: SystemInfo) -> Self {
         Self {
             system_info,
@@ -23,7 +23,7 @@ impl PromptBuilder {
         }
     }
 
-    /// 프롬프트 파일 로드
+    /// Load prompt file content
     fn load_prompt(name: &str) -> String {
         PromptAssets::get(name)
             .and_then(|file| {
@@ -38,7 +38,7 @@ impl PromptBuilder {
             })
     }
 
-    /// 시스템 프롬프트 생성
+    /// Create common prompt section
     fn build_common_prompt(&self) -> String {
         let template = Self::load_prompt("common.md");
 
@@ -55,7 +55,7 @@ impl PromptBuilder {
             .unwrap_or(template)
     }
 
-    /// Ask 모드용 메시지 배열 생성
+    /// Create Ask mode message array
     pub fn build_ask(&self) -> String {
         let common_prompt = self.build_common_prompt();
         let ask_template = Self::load_prompt("ask.md");
@@ -64,7 +64,7 @@ impl PromptBuilder {
         prompt
     }
 
-    /// Suggest 모드용 메시지 배열 생성
+    /// Create Suggest mode message array
     pub fn build_suggest(&self) -> String {
         let common_prompt = self.build_common_prompt();
         let suggest_template = Self::load_prompt("suggest.md");
@@ -83,7 +83,7 @@ impl PromptBuilder {
         prompt
     }
 
-    /// 모드 선택용 메시지 배열 생성
+    /// Create Mode Select message array
     pub fn build_mode_select(&self) -> String {
         let common_prompt = self.build_common_prompt();
         let mode_select_template = Self::load_prompt("mode_select.md");
