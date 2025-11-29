@@ -1,24 +1,18 @@
-use crate::cli::ui::{create_spinner, finish_spinner};
-use crate::core::{handle_ask, handle_suggest};
-use crate::llm::Message;
 use crate::llm::client::LLMRequest;
 use crate::llm::retry_with_parse;
-use crate::llm::{LLMClient, PromptBuilder, parse_mode_select};
-use crate::system::Config;
-use crate::system::SystemInfo;
-use crate::system::error::DoumResult;
+use crate::llm::{LLMClient, Message, ModeSelectResponse, PromptBuilder, parse_mode_select};
+use crate::system::{Config, SystemInfo};
+use anyhow::Result;
 
-/// Select mode automatically and execute
+/// Select mode automatically based on input
+/// Returns the selected mode and original input
 pub async fn select_mode(
     input: &str,
     client: &dyn LLMClient,
     system_info: &SystemInfo,
     config: &Config,
-) -> DoumResult<()> {
+) -> Result<ModeSelectResponse> {
     let builder = PromptBuilder::new(system_info.clone());
-
-    // Start spinner
-    let spinner = create_spinner("Analyzing input...");
 
     // Request mode selection
     let response = retry_with_parse(
@@ -35,26 +29,5 @@ pub async fn select_mode(
     )
     .await?;
 
-    // End spinner
-    finish_spinner(spinner, None);
-    println!("📌 Selected mode: {} mode\n", response.mode);
-
-    // Execute based on selected mode
-    match response.mode.as_str() {
-        "ask" => handle_ask(input, client, system_info, config).await,
-        "suggest" => {
-            handle_suggest(input, client, system_info, config).await?;
-            Ok(())
-        }
-        "execute" => {
-            // Execute 모드는 suggest로 통합됨 (suggest에서 실행 선택 가능)
-            handle_suggest(input, client, system_info, config).await?;
-            Ok(())
-        }
-        unknown => {
-            println!("⚠️  Unknown mode: {}", unknown);
-            println!("💡 Falling back to Ask mode.\n");
-            handle_ask(input, client, system_info, config).await
-        }
-    }
+    Ok(response)
 }

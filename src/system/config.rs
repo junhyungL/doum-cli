@@ -1,5 +1,5 @@
-use crate::system::error::{DoumError, DoumResult};
 use crate::system::paths::get_config_path;
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -41,26 +41,22 @@ pub struct LoggingConfig {
 }
 
 /// Ensure configuration directory and return config file path
-fn ensure_config() -> DoumResult<PathBuf> {
+fn ensure_config() -> Result<PathBuf> {
     let config_path = get_config_path()?;
 
     if let Some(parent) = config_path.parent()
         && !parent.exists()
     {
-        fs::create_dir_all(parent)
-            .map_err(|e| DoumError::Config(format!("Failed to create config directory: {}", e)))?;
+        fs::create_dir_all(parent).context("Failed to create config directory")?;
 
         // Set directory permissions to 700 on Unix
         #[cfg(unix)]
         {
-            let metadata = fs::metadata(parent).map_err(|e| {
-                DoumError::Config(format!("Failed to read directory metadata: {}", e))
-            })?;
+            let metadata = fs::metadata(parent).context("Failed to read directory metadata")?;
             let mut permissions = metadata.permissions();
             permissions.set_mode(0o700);
-            fs::set_permissions(parent, permissions).map_err(|e| {
-                DoumError::Config(format!("Failed to set directory permissions: {}", e))
-            })?;
+            fs::set_permissions(parent, permissions)
+                .context("Failed to set directory permissions")?;
         }
     }
 
@@ -68,7 +64,7 @@ fn ensure_config() -> DoumResult<PathBuf> {
 }
 
 /// load configuration from file or create default
-pub fn load_config() -> DoumResult<Config> {
+pub fn load_config() -> Result<Config> {
     let config_path = ensure_config()?;
 
     if config_path.exists() {
@@ -76,12 +72,10 @@ pub fn load_config() -> DoumResult<Config> {
         validate_config(&config_path)?;
 
         // Read file content
-        let content = fs::read_to_string(&config_path)
-            .map_err(|e| DoumError::Config(format!("Failed to read config file: {}", e)))?;
+        let content = fs::read_to_string(&config_path).context("Failed to read config file")?;
 
         // Parse TOML content
-        let config: Config = toml::from_str(&content)
-            .map_err(|e| DoumError::Config(format!("Failed to parse config file: {}", e)))?;
+        let config: Config = toml::from_str(&content).context("Failed to parse config file")?;
 
         Ok(config)
     } else {
@@ -93,7 +87,7 @@ pub fn load_config() -> DoumResult<Config> {
 }
 
 /// Load default configuration
-pub fn load_default_config() -> DoumResult<Config> {
+pub fn load_default_config() -> Result<Config> {
     Ok(Config {
         llm: LLMConfig {
             provider: "openai".to_string(),
@@ -115,16 +109,14 @@ pub fn load_default_config() -> DoumResult<Config> {
 }
 
 /// Save configuration to file with secure permissions
-pub fn save_config(config: &Config) -> DoumResult<()> {
+pub fn save_config(config: &Config) -> Result<()> {
     let config_path = ensure_config()?;
 
     // Serialize configuration to TOML
-    let content = toml::to_string_pretty(config)
-        .map_err(|e| DoumError::Config(format!("Failed to serialize config: {}", e)))?;
+    let content = toml::to_string_pretty(config).context("Failed to serialize config")?;
 
     // Write to file
-    fs::write(&config_path, content)
-        .map_err(|e| DoumError::Config(format!("Failed to write config file: {}", e)))?;
+    fs::write(&config_path, content).context("Failed to write config file")?;
 
     // if Windows, set ACLs for the user only
     #[cfg(windows)]
@@ -136,19 +128,17 @@ pub fn save_config(config: &Config) -> DoumResult<()> {
     // if Unix, set file permissions to 600
     #[cfg(unix)]
     {
-        let metadata = fs::metadata(&config_path)
-            .map_err(|e| DoumError::Config(format!("File metadata read failed: {}", e)))?;
+        let metadata = fs::metadata(&config_path).context("File metadata read failed")?;
         let mut permissions = metadata.permissions();
         permissions.set_mode(0o600);
-        fs::set_permissions(&config_path, permissions)
-            .map_err(|e| DoumError::Config(format!("Failed to set file permissions: {}", e)))?;
+        fs::set_permissions(&config_path, permissions).context("Failed to set file permissions")?;
     }
 
     Ok(())
 }
 
 /// Validate configuration file permissions
-fn validate_config(path: &PathBuf) -> DoumResult<()> {
+fn validate_config(path: &PathBuf) -> Result<()> {
     #[cfg(windows)]
     {
         // Windows에서는 기본적으로 안전하다고 가정
@@ -158,18 +148,17 @@ fn validate_config(path: &PathBuf) -> DoumResult<()> {
 
     #[cfg(unix)]
     {
-        let metadata = fs::metadata(path)
-            .map_err(|e| DoumError::Config(format!("Failed to read file metadata: {}", e)))?;
+        let metadata = fs::metadata(path).context("Failed to read file metadata")?;
         let permissions = metadata.permissions();
         let mode = permissions.mode() & 0o777;
 
         // Check if permissions are 600 or 400
         if mode != 0o600 && mode != 0o400 {
-            return Err(DoumError::InvalidConfig(format!(
+            anyhow::bail!(
                 "Insecure config file permissions: {:o} on {}. Expected 600 or 400.",
                 mode,
                 path.display()
-            )));
+            );
         }
     }
 

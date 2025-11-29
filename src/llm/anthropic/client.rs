@@ -2,7 +2,7 @@ use crate::llm::anthropic::payloads::{
     AnthropicConfig, AnthropicError, AnthropicRequest, AnthropicResponse,
 };
 use crate::llm::client::{LLMClient, LLMRequest};
-use crate::system::error::{DoumError, DoumResult};
+use anyhow::{Context, Result};
 use reqwest::Client;
 use std::time::Duration;
 
@@ -18,17 +18,17 @@ impl AnthropicClient {
     const API_VERSION: &'static str = "2023-06-01";
 
     /// Create a new AnthropicClient
-    pub fn new(config: AnthropicConfig, timeout: u64) -> DoumResult<Self> {
+    pub fn new(config: AnthropicConfig, timeout: u64) -> Result<Self> {
         if config.api_key.is_empty() {
-            return Err(DoumError::InvalidConfig(
-                "Anthropic API key is not set. Please configure it in the interactive config menu (doum config).".to_string()
-            ));
+            anyhow::bail!(
+                "Anthropic API key is not set. Please configure it in the interactive config menu (doum config)."
+            );
         }
 
         let http_client = Client::builder()
             .timeout(Duration::from_secs(timeout))
             .build()
-            .map_err(|e| DoumError::LLM(format!("Failed to build HTTP client: {}", e)))?;
+            .context("Failed to build HTTP client")?;
 
         Ok(Self {
             http_client,
@@ -39,7 +39,7 @@ impl AnthropicClient {
 
 #[async_trait::async_trait]
 impl LLMClient for AnthropicClient {
-    async fn generate(&self, request: LLMRequest) -> DoumResult<String> {
+    async fn generate(&self, request: LLMRequest) -> Result<String> {
         let request_body = AnthropicRequest {
             model: self.config.model.clone(),
             system: Some(request.system),
@@ -58,11 +58,11 @@ impl LLMClient for AnthropicClient {
             .await
             .map_err(|e| {
                 if e.is_timeout() {
-                    DoumError::Timeout
+                    anyhow::anyhow!("Request timeout")
                 } else if e.is_connect() {
-                    DoumError::LLM("Failed to connect to Anthropic API".to_string())
+                    anyhow::anyhow!("Failed to connect to Anthropic API")
                 } else {
-                    DoumError::LLM(format!("Failed to send request to Anthropic API: {}", e))
+                    anyhow::anyhow!("Failed to send request to Anthropic API: {}", e)
                 }
             })?;
 
@@ -77,29 +77,27 @@ impl LLMClient for AnthropicClient {
 
             // Try to parse Anthropic error format
             if let Ok(anthropic_error) = serde_json::from_str::<AnthropicError>(&error_text) {
-                return Err(DoumError::LLM(format!(
+                anyhow::bail!(
                     "Anthropic API Error ({}): {}",
-                    status, anthropic_error.error.message
-                )));
+                    status,
+                    anthropic_error.error.message
+                );
             }
 
-            return Err(DoumError::LLM(format!(
-                "Anthropic API Error: {} - {}",
-                status, error_text
-            )));
+            anyhow::bail!("Anthropic API Error: {} - {}", status, error_text);
         }
 
         // Parse response body
         let anthropic_response: AnthropicResponse = response
             .json()
             .await
-            .map_err(|e| DoumError::Parse(format!("Failed to parse Anthropic response: {}", e)))?;
+            .context("Failed to parse Anthropic response")?;
 
         // Extract and return the generated content
         anthropic_response
             .content
             .first()
             .map(|block| block.text.clone())
-            .ok_or_else(|| DoumError::Parse("No content in Anthropic response".to_string()))
+            .ok_or_else(|| anyhow::anyhow!("No content in Anthropic response"))
     }
 }

@@ -1,6 +1,7 @@
 # doum-cli
 
-🤖 **AI-Powered Terminal Assistant** - Natural language interface for OS commands
+🤖 **AI-Powered Terminal Assistant** 
+Terminal command helper powered by Large Language Models (LLMs) like OpenAI GPT and Anthropic Claude.
 
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -20,46 +21,54 @@
 
 #### Using Installation Script (Recommended)
 
-**Linux / macOS:**
+- **Linux / macOS:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/junhyungL/doum-cli/main/scripts/install.sh | sh
 ```
 
-**Windows (PowerShell):**
+- **Windows (PowerShell):**
 ```powershell
 iwr -useb https://raw.githubusercontent.com/junhyungL/doum-cli/main/scripts/install.ps1 | iex
 ```
 
-#### From GitHub Releases
-
-Download the latest binary for your platform from [Releases](https://github.com/junhyungL/doum-cli/releases):
-
-- **Linux (x86_64)**: `doum-linux-x86_64.tar.gz`
-- **macOS (Intel)**: `doum-macos-x86_64.tar.gz`
-- **macOS (Apple Silicon)**: `doum-macos-aarch64.tar.gz`
-- **Windows (x86_64)**: `doum-windows-x86_64.zip`
-
-Extract and add to your PATH.
-
 #### Using Cargo
 
+if you have Rust and Cargo installed, you can install via Cargo:
 ```bash
 cargo install doum-cli
 ```
 
-### Setup API Key
+#### From GitHub Releases
+
+- Download the latest binary for your platform from [Releases](https://github.com/junhyungL/doum-cli/releases)
+- Choose the appropriate version for your OS.
+- Extract and add to your PATH.
+
+### Setup Secret
+
+Before using doum-cli, you need to configure your LLM API keys.
 
 ```bash
-# Configure OpenAI secret (interactive)
+# Configure OpenAI secret
 doum secret openai
-
-# Or set via environment variable (if keyring doesn't work)
-# PowerShell:
-$env:OPENAI_SECRET='{"api_key":"sk-..."}'
-
-# Bash/Zsh:
-export OPENAI_SECRET='{"api_key":"sk-..."}'
 ```
+
+#### Storage Location by Platform
+
+- **Linux/FreeBSD/OpenBSD**: DBus Secret Service (GNOME Keyring, KWallet)
+- **macOS/iOS**: Local Keychain
+- **Windows**: Windows Credential Manager
+
+#### Troubleshooting
+
+**Linux users**: If you encounter issues with Secret Service:
+- Ensure you have a desktop environment with keyring support (GNOME Keyring or KWallet)
+- The Secret Service uses synchronous IPC calls which may take 10-100ms per operation
+- For async runtime users: Use a separate thread for keyring operations to avoid deadlocks
+
+**macOS/iOS users**: Service and user names cannot be empty (treated as wildcards)
+
+**Windows users**: Multi-threaded access may not be serialized - access credentials from one thread at a time
 
 ### Usage Examples
 
@@ -79,45 +88,19 @@ doum "check disk usage"
 
 | Command | Description |
 |---------|-------------|
-| `doum ask <question>` | Ask questions and get answers |
-| `doum suggest <task>` | Get command suggestions and execute |
 | `doum secret <provider>` | Configure API keys (openai/anthropic) |
 | `doum switch` | Switch LLM provider or model |
 | `doum config <subcommand>` | Manage configuration (show/set/get/unset/reset) |
+| `doum ask <question>` | Ask questions and get answers |
+| `doum suggest <task>` | Get command suggestions and execute |
 | `doum <input>` | Auto mode (LLM selects mode) |
 
 ## Documentation
 
+- [Quick Start](docs/QUICKSTART.md) - Installation and getting started
 - [Architecture](docs/ARCHITECTURE.md) - Architecture and module structure
 - [Commands](docs/COMMANDS.md) - Detailed command reference
-- [Quick Start](docs/QUICKSTART.md) - Installation and getting started
-- [TODO](docs/TODO.md) - Development roadmap
-
-## Tech Stack
-
-- **Language**: Rust 2024
-- **Terminal UI**: dialoguer
-- **Secret Storage**: keyring (OS-level credential store)
-- **LLM**: OpenAI GPT, Anthropic Claude
-
-## Development
-
-```bash
-# Build
-cargo build --release
-
-# Run tests
-cargo test
-
-# Run
-./target/release/doum-cli
-```
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details
-
-## Acknowledgments
-
-- Powered by [OpenAI](https://openai.com/) & [Anthropic](https://www.anthropic.com/)
-- Built with [Rust](https://www.rust-lang.org/) 🦀

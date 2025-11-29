@@ -1,4 +1,4 @@
-use crate::system::error::{DoumError, DoumResult};
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
 /// Select Mode Response
@@ -25,19 +25,17 @@ pub struct SuggestResponse {
 }
 
 /// parse Mode Select response
-pub fn parse_mode_select(json_str: &str) -> DoumResult<ModeSelectResponse> {
+pub fn parse_mode_select(json_str: &str) -> Result<ModeSelectResponse> {
     let cleaned = extract_json(json_str);
 
-    serde_json::from_str(&cleaned)
-        .map_err(|e| DoumError::Parse(format!("Failed to parse Mode Select response: {}", e)))
+    serde_json::from_str(&cleaned).context("Failed to parse Mode Select response")
 }
 
 /// parse Suggest response
-pub fn parse_suggest(json_str: &str) -> DoumResult<SuggestResponse> {
+pub fn parse_suggest(json_str: &str) -> Result<SuggestResponse> {
     let cleaned = extract_json(json_str);
 
-    serde_json::from_str(&cleaned)
-        .map_err(|e| DoumError::Parse(format!("Failed to parse Suggest response: {}", e)))
+    serde_json::from_str(&cleaned).context("Failed to parse Suggest response")
 }
 
 /// Extract JSON content from text (handles code blocks and surrounding text)

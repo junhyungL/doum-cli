@@ -1,11 +1,11 @@
 use crate::system::config::Config;
-use crate::system::error::{DoumError, DoumResult};
 use crate::system::paths::get_log_dir;
+use anyhow::{Context, Result};
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 /// Initialize logging system
-pub fn init_logging(config: &Config) -> DoumResult<()> {
+pub fn init_logging(config: &Config) -> Result<()> {
     if !config.logging.enabled {
         return Ok(());
     }
@@ -27,8 +27,7 @@ pub fn init_logging(config: &Config) -> DoumResult<()> {
 
     // Create log directory if it doesn't exist
     if !log_dir.exists() {
-        std::fs::create_dir_all(&log_dir)
-            .map_err(|e| DoumError::Config(format!("Failed to create log directory: {}", e)))?;
+        std::fs::create_dir_all(&log_dir).context("Failed to create log directory")?;
     }
 
     // Set up rolling file appender (daily rotation)
@@ -36,7 +35,7 @@ pub fn init_logging(config: &Config) -> DoumResult<()> {
         .rotation(Rotation::DAILY)
         .filename_suffix("log")
         .build(&log_dir)
-        .map_err(|e| DoumError::Config(format!("Failed to create log file appender: {}", e)))?;
+        .context("Failed to create log file appender")?;
 
     // Initialize tracing subscriber
     tracing_subscriber::registry()
@@ -48,9 +47,7 @@ pub fn init_logging(config: &Config) -> DoumResult<()> {
                 .with_target(false),
         )
         .try_init()
-        .map_err(|e| {
-            DoumError::Config(format!("Failed to initialize logging subscriber: {}", e))
-        })?;
+        .context("Failed to initialize logging subscriber")?;
 
     tracing::info!("Configured logging with level: {}", level);
     Ok(())

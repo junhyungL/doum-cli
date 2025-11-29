@@ -1,9 +1,9 @@
+use anyhow::Result;
 use clap::Parser;
 use doum_cli::cli::{
     Cli, Commands, handle_ask_command, handle_auto_command, handle_config_command,
     handle_secret_command, handle_suggest_command, handle_switch_command,
 };
-use doum_cli::system::error::DoumResult;
 use doum_cli::system::{init_logging, load_config, load_default_config};
 
 #[tokio::main]
@@ -15,7 +15,7 @@ async fn main() {
             tracing::error!("doum-cli terminated with an error: {}", e);
 
             // User-facing error message
-            eprintln!("\n[Error] {}\n", e.user_message());
+            eprintln!("\n[Error] {}\n", e);
             1
         }
     };
@@ -23,7 +23,7 @@ async fn main() {
     std::process::exit(exit_code);
 }
 
-async fn run() -> DoumResult<()> {
+async fn run() -> Result<()> {
     let cli = Cli::parse();
 
     // Load configuration

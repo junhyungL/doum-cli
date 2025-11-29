@@ -1,6 +1,7 @@
 use crate::llm::{AnthropicClient, AnthropicConfig, AnthropicSecret, OpenAIClient, OpenAIConfig};
-use crate::system::{DoumError, DoumResult};
+use crate::system::SecretManager;
 use crate::{llm::OpenAISecret, system::LLMConfig};
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
 /// LLM Message Role
@@ -48,10 +49,10 @@ impl Message {
 #[async_trait::async_trait]
 pub trait LLMClient: Send + Sync {
     /// Generate response from LLM
-    async fn generate(&self, request: LLMRequest) -> DoumResult<String>;
+    async fn generate(&self, request: LLMRequest) -> Result<String>;
 
     /// Verify LLM client connectivity
-    async fn verify(&self) -> DoumResult<bool> {
+    async fn verify(&self) -> Result<bool> {
         let test_request = LLMRequest {
             system: "This is a test, please respond shortly.".to_string(),
             messages: vec![Message::user("Hello")],
@@ -66,12 +67,13 @@ pub trait LLMClient: Send + Sync {
 }
 
 /// Create LLM client based on configuration
-pub fn create_client(config: &LLMConfig) -> DoumResult<Box<dyn LLMClient>> {
+pub fn create_client(config: &LLMConfig) -> Result<Box<dyn LLMClient>> {
     let provider = &config.provider;
 
     match provider.as_str() {
         "openai" => {
-            let secret = OpenAISecret::load().map_err(|e| DoumError::Config(e.to_string()))?;
+            let secret: OpenAISecret =
+                SecretManager::load("openai").context("Failed to load OpenAI secret")?;
 
             let openai_config = OpenAIConfig {
                 model: config.model.clone(),
@@ -83,7 +85,8 @@ pub fn create_client(config: &LLMConfig) -> DoumResult<Box<dyn LLMClient>> {
             Ok(Box::new(client))
         }
         "anthropic" => {
-            let secret = AnthropicSecret::load().map_err(|e| DoumError::Config(e.to_string()))?;
+            let secret: AnthropicSecret =
+                SecretManager::load("anthropic").context("Failed to load Anthropic secret")?;
 
             let anthropic_config = AnthropicConfig {
                 model: config.model.clone(),
@@ -92,9 +95,6 @@ pub fn create_client(config: &LLMConfig) -> DoumResult<Box<dyn LLMClient>> {
             let client = AnthropicClient::new(anthropic_config, config.timeout)?;
             Ok(Box::new(client))
         }
-        _ => Err(crate::system::DoumError::Config(format!(
-            "Unknown provider: {}",
-            provider
-        ))),
+        _ => anyhow::bail!("Unknown provider: {}", provider),
     }
 }

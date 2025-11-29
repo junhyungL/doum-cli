@@ -1,28 +1,18 @@
-use crate::cli::ui::{
-    CommandAction, confirm_execution, copy_to_clipboard, create_spinner, finish_spinner,
-    prompt_for_command_selection,
-};
-use crate::llm::Message;
 use crate::llm::client::LLMRequest;
 use crate::llm::retry_with_parse;
-use crate::llm::{LLMClient, PromptBuilder, parse_suggest};
-use crate::system::Config;
-use crate::system::SystemInfo;
-use crate::system::error::DoumResult;
-use crate::tools::execute_command;
+use crate::llm::{LLMClient, Message, PromptBuilder, SuggestResponse, parse_suggest};
+use crate::system::{Config, SystemInfo};
+use anyhow::Result;
 
 /// Provide command suggestions using Suggest mode
-/// Returns the selected command if copied or executed
+/// Returns the suggestion response for CLI to handle
 pub async fn handle_suggest(
     request: &str,
     client: &dyn LLMClient,
     system_info: &SystemInfo,
     config: &Config,
-) -> DoumResult<Option<String>> {
+) -> Result<SuggestResponse> {
     let builder = PromptBuilder::new(system_info.clone());
-
-    // Start spinner
-    let spinner = create_spinner("AI is generating commands...");
 
     // Call LLM to get suggestions
     let response = retry_with_parse(
@@ -39,69 +29,5 @@ pub async fn handle_suggest(
     )
     .await?;
 
-    // End spinner
-    finish_spinner(spinner, None);
-
-    if response.suggestions.is_empty() {
-        println!("⚠️  No commands to suggest.\n");
-        return Ok(None);
-    }
-
-    // Prompt user to select action for suggested commands
-    match prompt_for_command_selection(&response.suggestions)? {
-        Some((index, action)) => {
-            let selected = &response.suggestions[index];
-
-            match action {
-                CommandAction::Copy => {
-                    // Copy to clipboard
-                    match copy_to_clipboard(&selected.cmd) {
-                        Ok(_) => {
-                            println!("\n✅ Command copied to clipboard!");
-                            println!("📋 {}", selected.cmd);
-                            println!("\n💡 Press Ctrl+V to paste in terminal.\n");
-                        }
-                        Err(e) => {
-                            println!("\n⚠️  Failed to copy to clipboard: {}", e);
-                            println!("📋 Command: {}\n", selected.cmd);
-                        }
-                    }
-                    Ok(Some(selected.cmd.clone()))
-                }
-                CommandAction::Execute => {
-                    // Execute command
-                    if confirm_execution(&selected.cmd)? {
-                        println!("\n▶️  Executing command...\n");
-
-                        match execute_command(&selected.cmd, system_info, None) {
-                            Ok(output) => {
-                                let stdout = String::from_utf8_lossy(&output.stdout);
-                                let stderr = String::from_utf8_lossy(&output.stderr);
-
-                                println!("{}", stdout);
-                                if !stderr.is_empty() {
-                                    eprintln!("\nStderr:\n{}", stderr);
-                                }
-                                println!("\n✅ Command executed successfully.\n");
-                            }
-                            Err(e) => {
-                                eprintln!("\n❌ Execution failed: {}\n", e);
-                            }
-                        }
-                    } else {
-                        println!("\n❌ Execution cancelled.\n");
-                    }
-                    Ok(Some(selected.cmd.clone()))
-                }
-                CommandAction::Cancel => {
-                    println!("\n❌ Cancelled.\n");
-                    Ok(None)
-                }
-            }
-        }
-        None => {
-            println!("\n❌ Cancelled.\n");
-            Ok(None)
-        }
-    }
+    Ok(response)
 }

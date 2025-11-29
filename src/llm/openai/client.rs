@@ -2,7 +2,7 @@ use crate::llm::client::{LLMClient, LLMRequest};
 use crate::llm::openai::payloads::{
     OpenAIConfig, OpenAIError, OpenAIOutput, OpenAIRequest, OpenAIResponse, OpenAIWebSearchTool,
 };
-use crate::system::error::{DoumError, DoumResult};
+use anyhow::{Context, Result};
 use reqwest::Client;
 use std::time::Duration;
 
@@ -17,17 +17,17 @@ impl OpenAIClient {
     const API_URL: &'static str = "https://api.openai.com/v1/responses";
 
     /// Create a new OpenAIClient
-    pub fn new(config: OpenAIConfig, timeout: u64) -> DoumResult<Self> {
+    pub fn new(config: OpenAIConfig, timeout: u64) -> Result<Self> {
         if config.api_key.is_empty() {
-            return Err(DoumError::InvalidConfig(
-                "OpenAI API key is not set. Please configure it in the interactive config menu (doum config).".to_string()
-            ));
+            anyhow::bail!(
+                "OpenAI API key is not set. Please configure it in the interactive config menu (doum config)."
+            );
         }
 
         let http_client = Client::builder()
             .timeout(Duration::from_secs(timeout))
             .build()
-            .map_err(|e| DoumError::LLM(format!("Failed to build HTTP client: {}", e)))?;
+            .context("Failed to build HTTP client")?;
 
         Ok(Self {
             http_client,
@@ -38,7 +38,7 @@ impl OpenAIClient {
 
 #[async_trait::async_trait]
 impl LLMClient for OpenAIClient {
-    async fn generate(&self, request: LLMRequest) -> DoumResult<String> {
+    async fn generate(&self, request: LLMRequest) -> Result<String> {
         // create OpenAI request payload
         let openai_request = OpenAIRequest {
             model: self.config.model.clone(),
@@ -68,11 +68,11 @@ impl LLMClient for OpenAIClient {
         // send request
         let response = builder.json(&openai_request).send().await.map_err(|e| {
             if e.is_timeout() {
-                DoumError::Timeout
+                anyhow::anyhow!("Request timeout")
             } else if e.is_connect() {
-                DoumError::LLM("Failed to connect to OpenAI API".to_string())
+                anyhow::anyhow!("Failed to connect to OpenAI API")
             } else {
-                DoumError::LLM(format!("Failed to send request to OpenAI API: {}", e))
+                anyhow::anyhow!("Failed to send request to OpenAI API: {}", e)
             }
         })?;
 
@@ -87,23 +87,21 @@ impl LLMClient for OpenAIClient {
 
             // Try to parse OpenAI error format
             if let Ok(openai_error) = serde_json::from_str::<OpenAIError>(&error_text) {
-                return Err(DoumError::LLM(format!(
+                anyhow::bail!(
                     "OpenAI API Error ({}): {}",
-                    status, openai_error.error.message
-                )));
+                    status,
+                    openai_error.error.message
+                );
             }
 
-            return Err(DoumError::LLM(format!(
-                "OpenAI API Error: {} - {}",
-                status, error_text
-            )));
+            anyhow::bail!("OpenAI API Error: {} - {}", status, error_text);
         }
 
         // Parse response body
         let openai_response: OpenAIResponse = response
             .json()
             .await
-            .map_err(|e| DoumError::Parse(format!("Failed to parse OpenAI response: {}", e)))?;
+            .context("Failed to parse OpenAI response")?;
 
         // Extract message content
         for output in openai_response.output {
@@ -114,8 +112,6 @@ impl LLMClient for OpenAIClient {
             }
         }
 
-        Err(DoumError::Parse(
-            "No content in OpenAI response".to_string(),
-        ))
+        anyhow::bail!("No content in OpenAI response")
     }
 }

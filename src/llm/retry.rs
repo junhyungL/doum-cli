@@ -1,16 +1,12 @@
-use crate::system::error::{DoumError, DoumResult};
+use anyhow::Result;
 use std::future::Future;
 
 /// Retry LLM call with parsing when either the call or parsing fails
-pub async fn retry_with_parse<T, F, Fut, P>(
-    llm_call: F,
-    parser: P,
-    max_retries: u32,
-) -> DoumResult<T>
+pub async fn retry_with_parse<T, F, Fut, P>(llm_call: F, parser: P, max_retries: u32) -> Result<T>
 where
     F: Fn() -> Fut,
-    Fut: Future<Output = DoumResult<String>>,
-    P: Fn(&str) -> DoumResult<T>,
+    Fut: Future<Output = Result<String>>,
+    P: Fn(&str) -> Result<T>,
 {
     let mut last_error = None;
 
@@ -55,5 +51,5 @@ where
     }
 
     // All retries exhausted
-    Err(last_error.unwrap_or_else(|| DoumError::LLM("Unknown error after retries".to_string())))
+    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("Unknown error after retries")))
 }

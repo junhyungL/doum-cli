@@ -1,5 +1,5 @@
 use crate::llm::CommandSuggestion;
-use crate::system::error::{DoumError, DoumResult};
+use anyhow::{Context, Result};
 use arboard::Clipboard;
 use console::Style;
 use dialoguer::{Confirm, Input, Password, Select, theme::ColorfulTheme};
@@ -17,7 +17,7 @@ pub enum CommandAction {
 /// Enhanced command selection with dialoguer
 pub fn prompt_for_command_selection(
     suggestions: &[CommandSuggestion],
-) -> DoumResult<Option<(usize, CommandAction)>> {
+) -> Result<Option<(usize, CommandAction)>> {
     if suggestions.is_empty() {
         println!("\n⚠️  No commands to suggest.");
         return Ok(None);
@@ -45,7 +45,7 @@ pub fn prompt_for_command_selection(
         .items(&items)
         .default(0)
         .interact_opt()
-        .map_err(|e| DoumError::Config(format!("Selection failed: {}", e)))?;
+        .context("Selection failed")?;
 
     match selection {
         Some(index) => {
@@ -61,7 +61,7 @@ pub fn prompt_for_command_selection(
                 .items(&actions)
                 .default(0)
                 .interact_opt()
-                .map_err(|e| DoumError::Config(format!("Action selection failed: {}", e)))?;
+                .context("Action selection failed")?;
 
             match action {
                 Some(0) => Ok(Some((index, CommandAction::Copy))),
@@ -74,7 +74,7 @@ pub fn prompt_for_command_selection(
 }
 
 /// Simple confirmation prompt
-pub fn confirm_execution(command: &str) -> DoumResult<bool> {
+pub fn confirm_execution(command: &str) -> Result<bool> {
     let theme = ColorfulTheme::default();
     let cmd_style = Style::new().cyan().bold();
 
@@ -84,11 +84,11 @@ pub fn confirm_execution(command: &str) -> DoumResult<bool> {
         .with_prompt("Execute this command?")
         .default(true)
         .interact()
-        .map_err(|e| DoumError::Config(format!("Confirmation failed: {}", e)))
+        .context("Confirmation failed")
 }
 
 /// Text input prompt
-pub fn prompt_text_input(message: &str, default: Option<&str>) -> DoumResult<String> {
+pub fn prompt_text_input(message: &str, default: Option<&str>) -> Result<String> {
     let theme = ColorfulTheme::default();
 
     let mut input = Input::with_theme(&theme)
@@ -99,23 +99,21 @@ pub fn prompt_text_input(message: &str, default: Option<&str>) -> DoumResult<Str
         input = input.default(def.to_string());
     }
 
-    input
-        .interact_text()
-        .map_err(|e| DoumError::Config(format!("Input failed: {}", e)))
+    input.interact_text().context("Input failed")
 }
 
 /// Password input prompt
-pub fn prompt_password_input(message: &str) -> DoumResult<String> {
+pub fn prompt_password_input(message: &str) -> Result<String> {
     let theme = ColorfulTheme::default();
 
     Password::with_theme(&theme)
         .with_prompt(message)
         .interact()
-        .map_err(|e| DoumError::Config(format!("Password input failed: {}", e)))
+        .context("Password input failed")
 }
 
 /// Number input prompt
-pub fn prompt_number_input<T>(message: &str, default: Option<T>) -> DoumResult<T>
+pub fn prompt_number_input<T>(message: &str, default: Option<T>) -> Result<T>
 where
     T: std::str::FromStr + std::fmt::Display + Clone,
     T::Err: std::fmt::Display,
@@ -128,19 +126,14 @@ where
         input = input.default(def);
     }
 
-    input
-        .interact_text()
-        .map_err(|e| DoumError::Config(format!("Number input failed: {}", e)))
+    input.interact_text().context("Number input failed")
 }
 
 /// Copy text to clipboard
-pub fn copy_to_clipboard(text: &str) -> DoumResult<()> {
-    let mut clipboard =
-        Clipboard::new().map_err(|e| DoumError::Config(format!("Clipboard init failed: {}", e)))?;
+pub fn copy_to_clipboard(text: &str) -> Result<()> {
+    let mut clipboard = Clipboard::new().context("Clipboard init failed")?;
 
-    clipboard
-        .set_text(text)
-        .map_err(|e| DoumError::Config(format!("Clipboard copy failed: {}", e)))?;
+    clipboard.set_text(text).context("Clipboard copy failed")?;
 
     Ok(())
 }
@@ -166,4 +159,95 @@ pub fn finish_spinner(spinner: ProgressBar, message: Option<&str>) {
     } else {
         spinner.finish_and_clear();
     }
+}
+
+/// Display Ask mode response with formatting
+pub fn display_ask_response(response: &str) {
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("{}\n", response);
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+}
+
+/// Display selected mode in Auto mode
+pub fn display_selected_mode(mode: &str) {
+    println!("📌 Selected mode: {} mode\n", mode);
+}
+
+/// Handle suggest command response (selection, copy, execution)
+/// Returns Ok(()) if completed successfully
+pub fn handle_suggest_response(
+    suggestions: &[crate::llm::CommandSuggestion],
+    system_info: &crate::system::SystemInfo,
+) -> Result<()> {
+    use crate::tools::execute_command;
+
+    // Handle empty suggestions
+    if suggestions.is_empty() {
+        println!("⚠️  No commands to suggest.\n");
+        return Ok(());
+    }
+
+    // Prompt user to select action
+    match prompt_for_command_selection(suggestions)? {
+        Some((index, action)) => {
+            let selected = &suggestions[index];
+
+            match action {
+                CommandAction::Copy => match copy_to_clipboard(&selected.cmd) {
+                    Ok(_) => {
+                        println!("\n✅ Command copied to clipboard!");
+                        println!("📋 {}", selected.cmd);
+                        println!("\n💡 Press Ctrl+V to paste in terminal.\n");
+                    }
+                    Err(e) => {
+                        println!("\n⚠️  Failed to copy to clipboard: {}", e);
+                        println!("📋 Command: {}\n", selected.cmd);
+                    }
+                },
+                CommandAction::Execute => {
+                    if confirm_execution(&selected.cmd)? {
+                        println!("\n▶️  Executing command...\n");
+
+                        match execute_command(&selected.cmd, system_info, None) {
+                            Ok(output) => {
+                                let stdout = String::from_utf8_lossy(&output.stdout);
+                                let stderr = String::from_utf8_lossy(&output.stderr);
+
+                                println!("{}", stdout);
+                                if !stderr.is_empty() {
+                                    eprintln!("\nStderr:\n{}", stderr);
+                                }
+                                println!("\n✅ Command executed successfully.\n");
+                            }
+                            Err(e) => {
+                                eprintln!("\n❌ Execution failed: {}\n", e);
+                            }
+                        }
+                    } else {
+                        println!("\n❌ Execution cancelled.\n");
+                    }
+                }
+                CommandAction::Cancel => {
+                    println!("\n❌ Cancelled.\n");
+                }
+            }
+        }
+        None => {
+            println!("\n❌ Cancelled.\n");
+        }
+    }
+
+    Ok(())
+}
+
+/// Run async operation with spinner
+/// Generic wrapper for common pattern: create spinner -> run async task -> finish spinner
+pub async fn with_spinner<F, T>(message: &str, future: F) -> Result<T>
+where
+    F: std::future::Future<Output = Result<T>>,
+{
+    let spinner = create_spinner(message);
+    let result = future.await;
+    finish_spinner(spinner, None);
+    result
 }

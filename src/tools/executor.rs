@@ -1,7 +1,8 @@
 use crate::system::env::{OsType, ShellType, SystemInfo};
-use crate::system::error::{DoumError, DoumResult};
-use std::process::{Command, Output};
-use std::time::Duration;
+use anyhow::{Context, Result};
+use std::process::{Command, Output, Stdio};
+use std::thread;
+use std::time::{Duration, Instant};
 
 /// Result of command execution
 #[derive(Debug)]
@@ -54,7 +55,7 @@ pub fn execute_command(
     command: &str,
     system_info: &SystemInfo,
     timeout: Option<Duration>,
-) -> DoumResult<CommandOutput> {
+) -> Result<CommandOutput> {
     let output = match system_info.os {
         OsType::Windows => execute_command_windows(command, &system_info.shell, timeout)?,
         OsType::Linux | OsType::MacOS => {
@@ -77,9 +78,9 @@ pub fn execute_command(
 fn execute_command_windows(
     command: &str,
     shell: &ShellType,
-    _timeout: Option<Duration>,
-) -> DoumResult<Output> {
-    let mut cmd = match shell {
+    timeout: Option<Duration>,
+) -> Result<Output> {
+    let cmd = match shell {
         ShellType::PowerShell => {
             let mut c = Command::new("powershell.exe");
             c.arg("-NoProfile");
@@ -100,26 +101,19 @@ fn execute_command_windows(
             c
         }
         _ => {
-            return Err(DoumError::CommandExecution(
-                "Unsupported shell on Windows".to_string(),
-            ));
+            anyhow::bail!("Unsupported shell on Windows");
         }
     };
 
-    // 타임아웃 구현은 향후 개선 가능 (현재는 기본 동작)
-    let output = cmd
-        .output()
-        .map_err(|e| DoumError::CommandExecution(format!("Failed to execute command: {}", e)))?;
-
-    Ok(output)
+    run_with_timeout(cmd, timeout)
 }
 
 /// Execute command on Unix-like systems
 fn execute_command_unix(
     command: &str,
     shell: &ShellType,
-    _timeout: Option<Duration>,
-) -> DoumResult<Output> {
+    timeout: Option<Duration>,
+) -> Result<Output> {
     let shell_path = match shell {
         ShellType::Bash => "/bin/bash",
         ShellType::Zsh => "/bin/zsh",
@@ -131,9 +125,60 @@ fn execute_command_unix(
     cmd.arg("-c");
     cmd.arg(command);
 
-    let output = cmd
-        .output()
-        .map_err(|e| DoumError::CommandExecution(format!("Failed to execute command: {}", e)))?;
+    run_with_timeout(cmd, timeout)
+}
 
-    Ok(output)
+/// Run command with optional timeout
+fn run_with_timeout(mut cmd: Command, timeout: Option<Duration>) -> Result<Output> {
+    // setup to capture output
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+
+    let mut child = cmd.spawn().context("Failed to spawn command")?;
+
+    match timeout {
+        None => {
+            // No timeout, wait normally
+            child
+                .wait_with_output()
+                .context("Failed to wait for command")
+        }
+        Some(timeout) => {
+            let start = Instant::now();
+
+            loop {
+                match child.try_wait() {
+                    // Process finished
+                    Ok(Some(_status)) => {
+                        return child
+                            .wait_with_output()
+                            .context("Failed to wait for command output");
+                    }
+                    // Still running
+                    Ok(None) => {
+                        if start.elapsed() >= timeout {
+                            // When timeout occurs, kill the process
+                            let _ = child.kill();
+                            let output = child
+                                .wait_with_output()
+                                .context("Failed to collect output after killing command")?;
+
+                            // Return timeout error with partial output
+                            anyhow::bail!(
+                                "Command timed out after {:?}. Partial output:\n{}",
+                                timeout,
+                                String::from_utf8_lossy(&output.stdout)
+                            );
+                        }
+
+                        // Delay before next poll
+                        thread::sleep(Duration::from_millis(10));
+                    }
+                    Err(e) => {
+                        anyhow::bail!("Failed to poll command status: {}", e);
+                    }
+                }
+            }
+        }
+    }
 }
