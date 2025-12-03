@@ -30,9 +30,7 @@ pub async fn handle_suggest_command(request: &str) -> Result<()> {
         .map(|s| (s, s.cmd.as_str(), s.description.as_str()))
         .collect();
 
-    let selected = select("Select a command")
-        .items(&items)
-        .interact()?;
+    let selected = select("Select a command").items(&items).interact()?;
 
     // Copy to clipboard
     copy_to_clipboard(&selected.cmd)?;
@@ -46,8 +44,8 @@ pub async fn handle_suggest_command(request: &str) -> Result<()> {
 fn copy_to_clipboard(text: &str) -> Result<()> {
     use arboard::Clipboard;
 
-    let mut clipboard = Clipboard::new()
-        .map_err(|e| anyhow::anyhow!("Failed to initialize clipboard: {}", e))?;
+    let mut clipboard =
+        Clipboard::new().map_err(|e| anyhow::anyhow!("Failed to initialize clipboard: {}", e))?;
 
     clipboard
         .set_text(text)
