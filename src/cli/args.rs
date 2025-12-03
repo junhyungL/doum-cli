@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 #[derive(Parser, Debug)]
 #[command(name = "doum-cli")]
 #[command(author = "junhyungL")]
-#[command(version = "0.2.0")]
+#[command(version = "0.3.0")]
 #[command(about = "AI-powered terminal assistant - Ask about OS commands", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]

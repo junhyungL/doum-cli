@@ -2,6 +2,7 @@ use crate::llm::load_presets;
 use crate::system::{load_config, save_config};
 use anyhow::Result;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProviderModelOption {
     pub provider: String,
     pub model_id: String,

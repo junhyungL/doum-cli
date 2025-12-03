@@ -66,6 +66,21 @@ pub trait LLMClient: Send + Sync {
     }
 }
 
+/// Verify LLM configuration without creating a persistent client
+pub async fn verify_config(provider: &str, model: &str) -> Result<bool> {
+    let test_config = LLMConfig {
+        provider: provider.to_string(),
+        model: model.to_string(),
+        timeout: 30,
+        max_retries: 3,
+        use_thinking: false,
+        use_web_search: false,
+    };
+
+    let client = create_client(&test_config)?;
+    client.verify().await
+}
+
 /// Create LLM client based on configuration
 pub fn create_client(config: &LLMConfig) -> Result<Box<dyn LLMClient>> {
     let provider = &config.provider;

@@ -1,12 +1,17 @@
 // CLI 모듈
 
 pub mod args;
-pub mod commands;
-pub mod ui;
+pub mod ask;
+pub mod auto_mode;
+pub mod config;
+pub mod secret;
+pub mod suggest;
+pub mod switch;
 
 pub use args::{Cli, Commands, ConfigAction};
-pub use commands::{
-    handle_ask_command, handle_auto_command, handle_config_command, handle_secret_command,
-    handle_suggest_command, handle_switch_command,
-};
-pub use ui::{CommandAction, confirm_execution, copy_to_clipboard};
+pub use ask::handle_ask_command;
+pub use auto_mode::handle_auto_command;
+pub use config::handle_config_command;
+pub use secret::handle_secret_command;
+pub use suggest::handle_suggest_command;
+pub use switch::handle_switch_command;

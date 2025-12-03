@@ -8,6 +8,14 @@ doum [OPTIONS] [COMMAND]
 
 ## Commands
 
+### Auto Mode (Default)
+LLM automatically selects the appropriate mode when no command is specified.
+
+```bash
+doum "What is Kubernetes?"           # → ask mode
+doum "show disk usage"                # → suggest mode
+```
+
 ### `ask` - Ask Questions
 Get answers to technical questions.
 
@@ -28,40 +36,37 @@ doum suggest "monitor system resources"
 
 **Interactive Selection:**
 1. Select from suggested commands
-2. Choose: 📋 Copy, ▶️ Execute, or ❌ Cancel
+2. Command is automatically copied to clipboard
 
 ### `secret` - API Key Management
-Configure API keys securely using OS keyring.
+Configure API keys securely using OS keyring with automatic verification.
 
 ```bash
-# Configure OpenAI
-doum secret openai
-
-# Configure Anthropic
-doum secret anthropic
+doum secret
 ```
 
-**Storage Priority:**
-1. OS Keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service)
-2. Environment Variable (`OPENAI_SECRET`, `ANTHROPIC_SECRET`)
+**Selection Flow:**
+1. Select Provider (OpenAI / Anthropic)
+2. Input API key and optional fields (org/project for OpenAI)
+3. Automatic verification of the API key
 
-**Note:** Due to Windows keyring limitations, environment variables are recommended:
-```powershell
-# The secret command will output the exact command to use
-doum secret openai
-# Copy the displayed PowerShell command
-```
+**Storage:**
+- Windows: Credential Manager
+- macOS: Keychain
+- Linux: Secret Service
 
 ### `switch` - Provider/Model Selection
-Interactive menu to switch LLM provider or model.
+Interactive 2-step menu to switch LLM provider and model.
 
 ```bash
 doum switch
 ```
 
-**Options:**
-- Provider: OpenAI / Anthropic
-- Model: gpt-4, gpt-3.5-turbo, claude-3-5-sonnet, etc.
+**Selection Flow:**
+1. Select Provider (OpenAI / Anthropic)
+2. Select Model for chosen provider
+   - OpenAI: gpt-4, gpt-4-turbo, gpt-3.5-turbo, custom
+   - Anthropic: claude-3-5-sonnet, claude-3-opus, custom
 
 ### `config` - Configuration Management
 
@@ -87,14 +92,6 @@ doum config reset
 - `llm.model` - Model name
 - `llm.timeout` - Request timeout in seconds
 - `llm.max_retries` - Maximum retry attempts
-
-### Auto Mode (Default)
-LLM automatically selects the appropriate mode when no command is specified.
-
-```bash
-doum "What is Kubernetes?"           # → ask mode
-doum "show disk usage"                # → suggest mode
-```
 
 ## Options
 

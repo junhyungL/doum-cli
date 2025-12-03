@@ -12,7 +12,7 @@ pub struct ModeSelectResponse {
 pub type AskResponse = String;
 
 /// Command Suggestion
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CommandSuggestion {
     pub cmd: String,
     pub description: String,

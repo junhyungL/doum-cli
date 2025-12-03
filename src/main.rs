@@ -53,12 +53,12 @@ async fn run() -> Result<()> {
         }
         Some(Commands::Secret { provider }) => {
             tracing::info!("Running 'secret' command");
-            handle_secret_command(provider)?;
+            handle_secret_command(provider).await?;
             Ok(())
         }
         Some(Commands::Switch { provider, model }) => {
             tracing::info!("Running 'switch' command");
-            handle_switch_command(provider, model)?;
+            handle_switch_command(provider, model).await?;
             Ok(())
         }
         Some(Commands::Ask { question }) => {

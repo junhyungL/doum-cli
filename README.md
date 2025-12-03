@@ -9,11 +9,12 @@ Terminal command helper powered by Large Language Models (LLMs) like OpenAI GPT 
 ## Features
 
 - 💬 **Ask Mode**: Get answers to technical questions
-- 🔍 **Suggest Mode**: Command suggestions with copy/execute options
+- 🔍 **Suggest Mode**: Command suggestions with instant clipboard copy
 - 🎯 **Auto Mode**: LLM automatically selects the appropriate mode
-- 🔐 **Secret Management**: Secure API key storage with OS keyring
+- 🔐 **Secret Management**: Secure API key storage with automatic verification
 - ⚙️ **Config Management**: Simple config commands (set/get/unset/show/reset)
 - 🌍 **Multi-Provider**: Support for OpenAI (GPT) and Anthropic (Claude)
+- ✨ **Modern UI**: Clean, interactive CLI powered by cliclack
 
 ## Quick Start
 
@@ -70,18 +71,30 @@ doum secret openai
 
 **Windows users**: Multi-threaded access may not be serialized - access credentials from one thread at a time
 
+### Switch Provider/Model
+
+```bash
+# Interactive provider/model selection
+doum switch
+```
+
 ### Usage Examples
 
 ```bash
 # Ask questions
 doum ask "What is Docker?"
 
-# Get command suggestions
+# Get command suggestions (auto-copied to clipboard)
 doum suggest "find large files"
-→ Select option → Choose Copy/Execute
 
-# Auto mode
+# Auto mode (LLM decides ask/suggest)
 doum "check disk usage"
+
+# Configure API keys (with verification)
+doum secret
+
+# Switch provider/model
+doum switch
 ```
 
 ## Commands

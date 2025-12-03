@@ -2,54 +2,28 @@
 
 ## Installation
 
-### 1. Build
-```bash
-git clone https://github.com/yourusername/doum-cli.git
-cd doum-cli
-cargo build --release
-```
-
-### 2. Install
+### 1. Install
 ```bash
 cargo install --path .
 ```
 
-### 3. Add to PATH
-```bash
-# Linux/macOS
-cp target/release/doum-cli ~/.local/bin/doum
-
-# Windows
-copy target\release\doum-cli.exe C:\Users\YourName\.cargo\bin\doum.exe
-```
+### 2. Add to PATH
+- Ensure `~/.cargo/bin` is in your system PATH.
 
 ## Setup
 
 ### API Key Setup
 
-**OpenAI:**
 ```bash
 # Interactive setup (saves to OS keyring)
-doum secret openai
-
-# Or use environment variable (Windows)
-$env:OPENAI_SECRET='{"api_key":"sk-..."}'
-
-# Or use environment variable (Linux/macOS)
-export OPENAI_SECRET='{"api_key":"sk-..."}'
+doum secret
 ```
 
-**Anthropic (Claude):**
+### Switch Provider/Model
+
 ```bash
-# Interactive setup
-doum secret anthropic
-
-# Switch to Anthropic provider
+# Interactive provider/model selection
 doum switch
-# Select: Provider → Anthropic
-
-# Or use environment variable
-export ANTHROPIC_SECRET='{"api_key":"sk-ant-..."}'
 ```
 
 ## First Steps
@@ -64,7 +38,7 @@ doum ask "What is the difference between grep and awk?"
 doum suggest "find files larger than 100MB"
 ```
 
-→ Select option → Choose Copy/Execute
+→ Select command → Automatically copied to clipboard!
 
 ### 3. Auto Mode
 ```bash
@@ -106,12 +80,6 @@ doum suggest "create new branch from main"
 doum config show
 ```
 
-### Change LLM Provider or Model
-```bash
-doum switch
-# Interactive menu for provider/model selection
-```
-
 ### Set Configuration Values
 ```bash
 doum config set llm.timeout 60
@@ -131,34 +99,10 @@ doum config unset llm.timeout  # Revert to default
 
 ## Troubleshooting
 
-### API Key Issues
-```bash
-# Reconfigure API key
-doum secret openai
-
-# Or use environment variable as fallback
-$env:OPENAI_SECRET='{"api_key":"sk-..."}'
-```
-
-### View Current Configuration
-```bash
-doum config show
-```
-
-### Reset Configuration to Defaults
-```bash
-doum config reset
-```
-
 ### Keyring Not Working
-If secrets don't persist, use environment variables:
-```powershell
-# PowerShell (current session)
-$env:OPENAI_SECRET='{"api_key":"sk-..."}'
-
-# PowerShell (permanent - add to profile)
-echo "$env:OPENAI_SECRET='{\"api_key\":\"sk-...\'}}"` >> $PROFILE
-```
+If secrets does not save/load correctly:
+- Ensure your OS keyring service is running (e.g., GNOME Keyring, KWallet, Keychain, Credential Manager)
+- Check for any error messages during `doum secret` execution
 
 ### Check Logs
 Log file location:
