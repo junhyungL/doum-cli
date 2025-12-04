@@ -1,5 +1,10 @@
 # TODO
 
+## Top Priority
+- [ ] **Terminal Detection**: Detect from parent terminal to capture context
+- [ ] **LLM Providers Enum**: Refactor LLM providers into an enum for cleaner code
+- [ ] **Modify Linux Security**: Adjust Linux security settings to install cargo packages, glibc version unmatched issues
+
 ## High Priority
 
 - [ ] **Web Search Integration**: Enable web search when LLM needs up-to-date information

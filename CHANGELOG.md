@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-12-05
+
+### Added
+- **Provider Enum**: Introduced `Provider` enum in `llm/provider.rs` for better type safety
+  - Centralized provider management (OpenAI, Anthropic)
+  - Implemented `FromStr`, `Display`, and serialization traits
+  - Added helper methods: `as_str()`, `all()`, `all_names()`
+  - Comprehensive test coverage
+
+### Changed
+- **Improved Shell Detection**: Enhanced shell type detection using parent process analysis
+  - Added `sysinfo` dependency for cross-platform process inspection
+  - More accurate detection compared to environment variable fallback
+  - 2-tier detection: parent process (primary) → environment variables (fallback)
+- **Code Refactoring**: Replaced hardcoded provider strings with `Provider` enum
+  - Updated all modules: `llm/`, `core/`, `system/`, `cli/`
+  - Better compile-time safety and IDE support
+  - Easier maintenance and extension for new providers
+- **Prompt Builder**: Unified prompt concatenation logic
+  - Added `concat_prompts()` helper method
+  - Consistent formatting across all prompt types (ask, suggest, mode_select)
+
+### Fixed
+- Removed unused imports across multiple modules
+- Fixed prompt builder return values
+
 ## [0.3.0] - 2025-12-04
 
 ### Changed

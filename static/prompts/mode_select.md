@@ -4,7 +4,7 @@ Return ONLY a valid JSON object in the following format:
 
 ```json
 {
-  "mode": "ask|suggest|execute",
+  "mode": "ask|suggest",
   "reason": "brief explanation in the same language as the input"
 }
 ```
@@ -12,6 +12,6 @@ Return ONLY a valid JSON object in the following format:
 Guidelines:
 - "ask": For general questions, explanations, or when the user wants to learn something
 - "suggest": When the user wants options or isn't sure about the exact command
-- "execute": When the user clearly wants to perform a specific action
 
-Return ONLY the JSON object, no additional text.
+Important:
+- Return ONLY the JSON object, no additional text.

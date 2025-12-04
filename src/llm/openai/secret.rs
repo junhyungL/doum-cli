@@ -6,8 +6,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct OpenAISecret {
     pub api_key: String,
+
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub organization: Option<String>,
+
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project: Option<String>,
 }

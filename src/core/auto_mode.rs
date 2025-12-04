@@ -1,6 +1,6 @@
 use crate::llm::client::LLMRequest;
 use crate::llm::retry_with_parse;
-use crate::llm::{LLMClient, Message, ModeSelectResponse, PromptBuilder, parse_mode_select};
+use crate::llm::{AutoResponse, LLMClient, Message, PromptBuilder, parse_auto_mode};
 use crate::system::{Config, SystemInfo};
 use anyhow::Result;
 
@@ -11,20 +11,20 @@ pub async fn select_mode(
     client: &dyn LLMClient,
     system_info: &SystemInfo,
     config: &Config,
-) -> Result<ModeSelectResponse> {
+) -> Result<AutoResponse> {
     let builder = PromptBuilder::new(system_info.clone());
 
     // Request mode selection
     let response = retry_with_parse(
         || {
             let request = LLMRequest {
-                system: builder.build_mode_select(),
+                system: builder.build_auto_mode(),
                 messages: vec![Message::user(input)],
                 use_websearch: false,
             };
             Box::pin(client.generate(request))
         },
-        parse_mode_select,
+        parse_auto_mode,
         config.llm.max_retries,
     )
     .await?;

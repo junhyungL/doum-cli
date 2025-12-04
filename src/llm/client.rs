@@ -1,4 +1,6 @@
-use crate::llm::{AnthropicClient, AnthropicConfig, AnthropicSecret, OpenAIClient, OpenAIConfig};
+use crate::llm::{
+    AnthropicClient, AnthropicConfig, AnthropicSecret, OpenAIClient, OpenAIConfig, Provider,
+};
 use crate::system::SecretManager;
 use crate::{llm::OpenAISecret, system::LLMConfig};
 use anyhow::{Context, Result};
@@ -83,12 +85,12 @@ pub async fn verify_config(provider: &str, model: &str) -> Result<bool> {
 
 /// Create LLM client based on configuration
 pub fn create_client(config: &LLMConfig) -> Result<Box<dyn LLMClient>> {
-    let provider = &config.provider;
+    let provider: Provider = config.provider.parse()?;
 
-    match provider.as_str() {
-        "openai" => {
+    match provider {
+        Provider::OpenAI => {
             let secret: OpenAISecret =
-                SecretManager::load("openai").context("Failed to load OpenAI secret")?;
+                SecretManager::load(provider.as_str()).context("Failed to load OpenAI secret")?;
 
             let openai_config = OpenAIConfig {
                 model: config.model.clone(),
@@ -99,9 +101,9 @@ pub fn create_client(config: &LLMConfig) -> Result<Box<dyn LLMClient>> {
             let client = OpenAIClient::new(openai_config, config.timeout)?;
             Ok(Box::new(client))
         }
-        "anthropic" => {
-            let secret: AnthropicSecret =
-                SecretManager::load("anthropic").context("Failed to load Anthropic secret")?;
+        Provider::Anthropic => {
+            let secret: AnthropicSecret = SecretManager::load(provider.as_str())
+                .context("Failed to load Anthropic secret")?;
 
             let anthropic_config = AnthropicConfig {
                 model: config.model.clone(),
@@ -110,6 +112,5 @@ pub fn create_client(config: &LLMConfig) -> Result<Box<dyn LLMClient>> {
             let client = AnthropicClient::new(anthropic_config, config.timeout)?;
             Ok(Box::new(client))
         }
-        _ => anyhow::bail!("Unknown provider: {}", provider),
     }
 }

@@ -1,5 +1,6 @@
 use std::env;
 use std::path::PathBuf;
+use sysinfo::System;
 
 /// Supported operating system
 #[derive(Debug, Clone, PartialEq)]
@@ -96,6 +97,23 @@ pub fn detect_os() -> OsType {
 
 /// Detect shell type
 pub fn detect_shell() -> ShellType {
+    // Try to detect from parent process first
+    if let Some(name) = detect_shell_from_parent() {
+        let name = name.to_lowercase();
+        if name.contains("bash") {
+            return ShellType::Bash;
+        } else if name.contains("zsh") {
+            return ShellType::Zsh;
+        } else if name.contains("fish") {
+            return ShellType::Fish;
+        } else if name.contains("powershell") || name.contains("pwsh") {
+            return ShellType::PowerShell;
+        } else if name.contains("cmd") {
+            return ShellType::Cmd;
+        }
+    }
+
+    // Fallback to environment variable detection
     if cfg!(target_os = "windows") {
         // Check COMSPEC on Windows
         if let Ok(comspec) = env::var("COMSPEC")
@@ -108,26 +126,34 @@ pub fn detect_shell() -> ShellType {
         if env::var("PSModulePath").is_ok() {
             return ShellType::PowerShell;
         }
+    } else {
+        // Check SHELL variable on Unix-like systems
+        if let Ok(shell) = env::var("SHELL") {
+            let shell_lower = shell.to_lowercase();
 
-        // Windows Default
-        return ShellType::Cmd;
-    }
-
-    // Check SHELL variable on Unix-like systems
-    if let Ok(shell) = env::var("SHELL") {
-        let shell_lower = shell.to_lowercase();
-
-        if shell_lower.contains("bash") {
-            return ShellType::Bash;
-        } else if shell_lower.contains("zsh") {
-            return ShellType::Zsh;
-        } else if shell_lower.contains("fish") {
-            return ShellType::Fish;
+            if shell_lower.contains("bash") {
+                return ShellType::Bash;
+            } else if shell_lower.contains("zsh") {
+                return ShellType::Zsh;
+            } else if shell_lower.contains("fish") {
+                return ShellType::Fish;
+            }
         }
     }
 
-    // 부모 프로세스 이름으로 추가 확인 시도 (간단한 방법)
-    // 실제로는 더 정교한 감지가 필요할 수 있음
-
+    // Default to Unknown if detection fails
     ShellType::Unknown
+}
+
+/// Detect shell type from parent process
+fn detect_shell_from_parent() -> Option<String> {
+    let mut system = System::new();
+    system.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
+    let current_pid = sysinfo::Pid::from_u32(std::process::id());
+    let current = system.process(current_pid)?;
+    let parent_pid = current.parent()?;
+
+    let parent = system.process(parent_pid)?;
+    Some(parent.name().to_string_lossy().to_string())
 }

@@ -1,3 +1,4 @@
+use crate::llm::Provider;
 use rust_embed::RustEmbed;
 use serde::Deserialize;
 
@@ -18,8 +19,8 @@ struct ModelList {
 }
 
 /// Load model presets for a provider
-pub fn load_presets(provider: &str) -> Vec<ModelInfo> {
-    let filename = format!("{}.toml", provider);
+pub fn load_presets(provider: &Provider) -> Vec<ModelInfo> {
+    let filename = format!("{}.toml", provider.as_str());
 
     if let Some(content) = PresetModels::get(&filename)
         && let Ok(data) = std::str::from_utf8(content.data.as_ref())

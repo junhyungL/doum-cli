@@ -1,35 +1,28 @@
-use crate::core::SecretService;
-use crate::llm::verify_config;
+use crate::core::{get_provider_config, save_secrets};
+use crate::llm::{Provider, load_presets, verify_config};
 use anyhow::{Context, Result};
+use cliclack::{input, password, select, spinner};
 use std::collections::HashMap;
 
-pub async fn handle_secret_command(provider: Option<String>) -> Result<()> {
-    use cliclack::{input, password, select, spinner};
+pub async fn handle_secret_command() -> Result<()> {
+    cliclack::intro("🔐 Configure LLM Provider Secret")?;
 
-    // Select provider if not provided
-    let provider = match provider {
-        Some(p) => p,
-        None => {
-            let providers = SecretService::list_providers();
-            let items: Vec<_> = providers
-                .iter()
-                .map(|p| (p.as_str(), p.as_str(), ""))
-                .collect();
+    // Step 1: Select provider
+    let providers = Provider::all();
+    let provider_items: Vec<_> = providers
+        .iter()
+        .map(|p| (p.as_str(), p.as_str(), ""))
+        .collect();
 
-            select("Select provider to configure")
-                .items(&items)
-                .interact()
-                .context("Selection failed")?
-                .to_string()
-        }
-    };
+    let provider_str = select("Select provider to configure")
+        .items(&provider_items)
+        .interact()
+        .context("Selection failed")?;
 
-    // Get configuration for this provider
-    let config = SecretService::get_provider_config(&provider)?;
+    let provider: Provider = provider_str.parse()?;
 
-    cliclack::intro(format!("🔐 Configure {} Secrets", provider.to_uppercase()))?;
-
-    // Collect values from user
+    // Step 2: Prompt for secret fields
+    let config = get_provider_config(&provider)?;
     let mut values = HashMap::new();
     for field in &config.fields {
         let value = if field.is_password {
@@ -45,14 +38,14 @@ pub async fn handle_secret_command(provider: Option<String>) -> Result<()> {
                 .context("Input failed")?;
             input_value
         };
-        values.insert(field.name.clone(), value);
+        values.insert(field.name.clone(), value.trim().to_string());
     }
 
     // Save secrets
-    SecretService::save_secrets(&provider, values)?;
+    save_secrets(&provider, values)?;
 
     // Get first model for verification
-    let first_model = crate::llm::load_presets(&provider)
+    let first_model = load_presets(&provider)
         .first()
         .map(|m| m.id.clone())
         .unwrap_or_else(|| "gpt-4".to_string());
@@ -61,11 +54,11 @@ pub async fn handle_secret_command(provider: Option<String>) -> Result<()> {
     let sp = spinner();
     sp.start("Verifying API key...");
 
-    match verify_config(&provider, &first_model).await {
+    match verify_config(provider.as_str(), &first_model).await {
         Ok(true) => {
             sp.stop(format!(
                 "✅ {} secrets saved and verified successfully",
-                provider.to_uppercase()
+                provider_str.to_uppercase()
             ));
             cliclack::outro("Configuration complete!")?;
             Ok(())

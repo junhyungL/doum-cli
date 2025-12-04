@@ -11,6 +11,9 @@ pub trait ProviderSecret: Serialize + for<'de> Deserialize<'de> {
     fn masked(&self) -> String;
 }
 
+/// Constant service name for keyring entries
+const SECRET_SERVICE_NAME: &str = "doum-cli";
+
 /// Secret manager for handling keyring operations
 pub struct SecretManager;
 
@@ -21,7 +24,8 @@ impl SecretManager {
         secret.validate()?;
 
         // Save to Keyring
-        let entry = Entry::new(service_name, "doum-cli").context("Failed to access keyring")?;
+        let entry =
+            Entry::new(service_name, SECRET_SERVICE_NAME).context("Failed to access keyring")?;
         let value = serde_json::to_string(secret).context("Failed to serialize secret to JSON")?;
         entry
             .set_password(&value)
@@ -32,7 +36,8 @@ impl SecretManager {
 
     /// Load secret from Keyring
     pub fn load<T: ProviderSecret>(service_name: &str) -> Result<T> {
-        let entry = Entry::new(service_name, "doum-cli").context("Failed to access keyring")?;
+        let entry =
+            Entry::new(service_name, SECRET_SERVICE_NAME).context("Failed to access keyring")?;
 
         let secret_json = entry
             .get_password()
@@ -43,7 +48,8 @@ impl SecretManager {
 
     /// Delete secret from Keyring
     pub fn delete(service_name: &str) -> Result<()> {
-        let entry = Entry::new(service_name, "doum-cli").context("Failed to access keyring")?;
+        let entry =
+            Entry::new(service_name, SECRET_SERVICE_NAME).context("Failed to access keyring")?;
         entry
             .delete_credential()
             .context("Failed to delete from keyring")?;

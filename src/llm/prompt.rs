@@ -55,13 +55,20 @@ impl PromptBuilder {
             .unwrap_or(template)
     }
 
+    /// Create Mode Select message array
+    pub fn build_auto_mode(&self) -> String {
+        let common_prompt = self.build_common_prompt();
+        let mode_select_template = Self::load_prompt("mode_select.md");
+
+        Self::concat_prompts(vec![&common_prompt, &mode_select_template])
+    }
+
     /// Create Ask mode message array
     pub fn build_ask(&self) -> String {
         let common_prompt = self.build_common_prompt();
-        let ask_template = Self::load_prompt("ask.md");
+        let ask_prompt = Self::load_prompt("ask.md");
 
-        let prompt = format!("{}\n\n---\n\n{}", common_prompt, ask_template);
-        prompt
+        Self::concat_prompts(vec![&common_prompt, &ask_prompt])
     }
 
     /// Create Suggest mode message array
@@ -79,16 +86,11 @@ impl PromptBuilder {
             .render_template(&suggest_template, &data)
             .unwrap_or(suggest_template);
 
-        let prompt = format!("{}\n\n---\n\n{}", common_prompt, suggest_prompt);
-        prompt
+        Self::concat_prompts(vec![&common_prompt, &suggest_prompt])
     }
 
-    /// Create Mode Select message array
-    pub fn build_mode_select(&self) -> String {
-        let common_prompt = self.build_common_prompt();
-        let mode_select_template = Self::load_prompt("mode_select.md");
-
-        let prompt = format!("{}\n\n---\n\n{}", common_prompt, mode_select_template);
-        prompt
+    /// Concatenate multiple prompt sections
+    fn concat_prompts(prompts: Vec<&str>) -> String {
+        prompts.join("\n\n---\n\n")
     }
 }

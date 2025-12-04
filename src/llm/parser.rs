@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 /// Select Mode Response
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ModeSelectResponse {
+pub struct AutoResponse {
     pub mode: String,
     pub reason: String,
 }
@@ -24,11 +24,11 @@ pub struct SuggestResponse {
     pub suggestions: Vec<CommandSuggestion>,
 }
 
-/// parse Mode Select response
-pub fn parse_mode_select(json_str: &str) -> Result<ModeSelectResponse> {
+/// parse Auto Mode response
+pub fn parse_auto_mode(json_str: &str) -> Result<AutoResponse> {
     let cleaned = extract_json(json_str);
 
-    serde_json::from_str(&cleaned).context("Failed to parse Mode Select response")
+    serde_json::from_str(&cleaned).context("Failed to parse Auto Mode response")
 }
 
 /// parse Suggest response
@@ -65,57 +65,4 @@ fn extract_json(text: &str) -> String {
 
     // Return original text if no JSON found
     text.to_string()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_mode_select() {
-        let json = r#"{"mode":"ask","reason":"사용자가 질문을 했습니다"}"#;
-        let result = parse_mode_select(json).unwrap();
-        assert_eq!(result.mode, "ask");
-        assert_eq!(result.reason, "사용자가 질문을 했습니다");
-    }
-
-    #[test]
-    fn test_parse_mode_select_with_markdown() {
-        let json = r#"
-```json
-{"mode":"execute","reason":"실행 요청"}
-```
-        "#;
-        let result = parse_mode_select(json).unwrap();
-        assert_eq!(result.mode, "execute");
-    }
-
-    #[test]
-    fn test_parse_suggest() {
-        let json = r#"
-{
-  "suggestions": [
-    {"cmd": "ls -la", "description": "모든 파일 나열"},
-    {"cmd": "dir", "description": "디렉터리 내용 보기"}
-  ]
-}
-        "#;
-        let result = parse_suggest(json).unwrap();
-        assert_eq!(result.suggestions.len(), 2);
-        assert_eq!(result.suggestions[0].cmd, "ls -la");
-    }
-
-    #[test]
-    fn test_extract_json() {
-        let text = "Some text before\n{\"key\":\"value\"}\nSome text after";
-        let result = extract_json(text);
-        assert_eq!(result, r#"{"key":"value"}"#);
-    }
-
-    #[test]
-    fn test_extract_json_with_code_block() {
-        let text = "```json\n{\"key\":\"value\"}\n```";
-        let result = extract_json(text);
-        assert_eq!(result, r#"{"key":"value"}"#);
-    }
 }

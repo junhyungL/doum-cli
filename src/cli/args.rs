@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 #[derive(Parser, Debug)]
 #[command(name = "doum-cli")]
 #[command(author = "junhyungL")]
-#[command(version = "0.3.0")]
+#[command(version = "0.3.1")]
 #[command(about = "AI-powered terminal assistant - Ask about OS commands", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
@@ -22,17 +22,9 @@ pub enum Commands {
         action: Option<ConfigAction>,
     },
     /// Secret management (API keys, tokens)
-    Secret {
-        /// Provider name (openai, anthropic)
-        provider: Option<String>,
-    },
+    Secret,
     /// Switch provider and model
-    Switch {
-        /// Provider name (optional)
-        provider: Option<String>,
-        /// Model name (optional)
-        model: Option<String>,
-    },
+    Switch,
     /// Ask questions (Ask mode)
     Ask {
         /// Question to ask
