@@ -1,6 +1,6 @@
 use crate::llm::client::LLMRequest;
 use crate::llm::retry_with_parse;
-use crate::llm::{LLMClient, Message, PromptBuilder, SuggestResponse, parse_suggest};
+use crate::llm::{LLMClient, LLMMessage, PromptBuilder, SuggestResponse, parse_suggest};
 use crate::system::{Config, SystemInfo};
 use anyhow::Result;
 
@@ -19,8 +19,7 @@ pub async fn handle_suggest(
         || {
             let request = LLMRequest {
                 system: builder.build_suggest(),
-                messages: vec![Message::user(request)],
-                use_websearch: config.llm.use_web_search,
+                messages: vec![LLMMessage::user(request)],
             };
             Box::pin(client.generate(request))
         },

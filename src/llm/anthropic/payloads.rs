@@ -1,3 +1,4 @@
+use crate::llm::LLMMessage;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -11,7 +12,7 @@ pub(crate) struct AnthropicRequest {
     pub model: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub system: Option<String>,
-    pub messages: Vec<crate::llm::Message>,
+    pub messages: Vec<LLMMessage>,
     pub max_tokens: u32,
 }
 

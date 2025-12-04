@@ -10,7 +10,7 @@ pub mod provider;
 pub mod retry;
 
 pub use anthropic::{AnthropicClient, AnthropicConfig, AnthropicSecret};
-pub use client::{LLMClient, Message, Role, create_client, verify_config};
+pub use client::{LLMClient, LLMMessage, LLMRole, create_client, verify_client};
 pub use openai::{OpenAIClient, OpenAIConfig, OpenAISecret};
 pub use parser::{
     AskResponse, AutoResponse, CommandSuggestion, SuggestResponse, parse_auto_mode, parse_suggest,

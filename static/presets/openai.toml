@@ -4,6 +4,16 @@ name = "GPT-5.1"
 description = "Best for complex coding and agent tasks"
 
 [[models]]
+id = "gpt-5-pro"
+name = "GPT-5 Pro"
+description = "Version of GPT-5 that produces smarter and more precise responses"
+
+[[models]]
+id = "gpt-5"
+name = "GPT-5"
+description = "Flagship model for most tasks"
+
+[[models]]
 id = "gpt-5-mini"
 name = "GPT-5 Mini"
 description = "Faster and cheaper version of GPT-5"
@@ -12,13 +22,3 @@ description = "Faster and cheaper version of GPT-5"
 id = "gpt-5-nano"
 name = "GPT-5 Nano"
 description = "Fastest and most affordable for simple tasks"
-
-[[models]]
-id = "gpt-4.1"
-name = "GPT-4.1"
-description = "Previous generation flagship model"
-
-[[models]]
-id = "gpt-4.1-mini"
-name = "GPT-4.1 Mini"
-description = "Smaller version of GPT-4.1"

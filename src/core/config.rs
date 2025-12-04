@@ -7,7 +7,7 @@ pub fn get_value(key: &str) -> Result<String> {
     let config = load_config()?;
 
     let value = match key {
-        "llm.provider" => config.llm.provider,
+        "llm.provider" => config.llm.provider.as_str().to_string(),
         "llm.model" => config.llm.model,
         "llm.timeout" => config.llm.timeout.to_string(),
         "llm.max_retries" => config.llm.max_retries.to_string(),
@@ -31,7 +31,7 @@ pub fn set_value(key: &str, value: &str) -> Result<()> {
 
     match key {
         "llm.provider" => {
-            config.llm.provider = value.to_string();
+            config.llm.provider = value.parse()?;
         }
         "llm.model" => {
             config.llm.model = value.to_string();

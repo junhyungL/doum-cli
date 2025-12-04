@@ -30,6 +30,7 @@ src/
 │   └── config.rs       # Config manager
 ├── llm/                # LLM integration
 │   ├── client.rs       # LLM client trait & verify_config
+│   ├── provider.rs     # Provider enum (OpenAI, Anthropic)
 │   ├── prompt.rs       # Prompt templates
 │   ├── parser.rs       # Response parsing
 │   ├── presets.rs      # Provider/Model presets
@@ -62,13 +63,15 @@ src/
 - **auto_mode.rs**: LLM analyzes input and automatically selects ask/suggest mode
 
 ### 3. LLM Integration (`llm/`)
+- **provider.rs**: Type-safe Provider enum with FromStr/Display traits
 - Provider-specific implementations (OpenAI, Anthropic)
 - Secure secret management (keyring + environment variables)
-- Streaming response support
 - Retry logic with exponential backoff
 
 ### 4. System Layer (`system/`)
 - Auto-detect OS/Shell (Windows/Linux/macOS, cmd/powershell/bash/zsh)
+  - Parent process-based shell detection (primary)
+  - Environment variable fallback (secondary)
 - TOML-based configuration file management
 
 ## Data Flow

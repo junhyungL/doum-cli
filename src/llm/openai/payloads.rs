@@ -1,4 +1,4 @@
-use crate::llm::Message;
+use crate::llm::LLMMessage;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,7 +15,7 @@ pub struct OpenAIConfig {
 pub(crate) struct OpenAIRequest {
     pub model: String,
     pub instructions: Option<String>,
-    pub input: Vec<Message>,
+    pub input: Vec<LLMMessage>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tools: Option<Vec<OpenAIWebSearchTool>>,
 }

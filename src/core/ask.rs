@@ -1,5 +1,5 @@
 use crate::llm::client::LLMRequest;
-use crate::llm::{LLMClient, Message, PromptBuilder};
+use crate::llm::{LLMClient, LLMMessage, PromptBuilder};
 use crate::system::{Config, SystemInfo};
 use anyhow::Result;
 
@@ -14,8 +14,7 @@ pub async fn handle_ask(
 
     let request = LLMRequest {
         system: builder.build_ask(),
-        messages: vec![Message::user(question)],
-        use_websearch: _config.llm.use_web_search,
+        messages: vec![LLMMessage::user(question)],
     };
 
     // Generate response

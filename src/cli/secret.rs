@@ -1,5 +1,6 @@
 use crate::core::{get_provider_config, save_secrets};
-use crate::llm::{Provider, load_presets, verify_config};
+use crate::llm::{Provider, load_presets, verify_client};
+use crate::system::LLMConfig;
 use anyhow::{Context, Result};
 use cliclack::{input, password, select, spinner};
 use std::collections::HashMap;
@@ -11,7 +12,7 @@ pub async fn handle_secret_command() -> Result<()> {
     let providers = Provider::all();
     let provider_items: Vec<_> = providers
         .iter()
-        .map(|p| (p.as_str(), p.as_str(), ""))
+        .map(|p| (p.as_str(), p.as_display(), ""))
         .collect();
 
     let provider_str = select("Select provider to configure")
@@ -48,29 +49,40 @@ pub async fn handle_secret_command() -> Result<()> {
     let first_model = load_presets(&provider)
         .first()
         .map(|m| m.id.clone())
-        .unwrap_or_else(|| "gpt-4".to_string());
+        .unwrap_or_else(|| "gpt-5-nano".to_string());
+
+    let llm_config = LLMConfig {
+        provider,
+        model: first_model.clone(),
+        max_retries: 1,
+        timeout: 30,
+        use_thinking: false,
+        use_web_search: false,
+    };
 
     // Verify with spinner
     let sp = spinner();
     sp.start("Verifying API key...");
 
-    match verify_config(provider.as_str(), &first_model).await {
+    match verify_client(&llm_config).await {
         Ok(true) => {
             sp.stop(format!(
-                "✅ {} secrets saved and verified successfully",
+                "{} secrets saved and verified successfully",
                 provider_str.to_uppercase()
             ));
-            cliclack::outro("Configuration complete!")?;
+            cliclack::outro("✅ Configuration complete!")?;
             Ok(())
         }
         Ok(false) => {
-            sp.stop("⚠️  API key verification failed");
-            cliclack::outro("Secrets saved but verification failed. Please check your API key.")?;
+            sp.stop("API key verification failed");
+            cliclack::outro(
+                "⚠️ Secrets saved but verification failed. Please check your API key.",
+            )?;
             Ok(())
         }
         Err(e) => {
-            sp.stop("❌ Verification error");
-            cliclack::outro(format!("Error: {}", e))?;
+            sp.stop("Verification error");
+            cliclack::outro(format!("❌ Error: {}", e))?;
             Err(e)
         }
     }

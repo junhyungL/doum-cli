@@ -68,7 +68,7 @@ pub fn save_secrets(provider: &Provider, values: HashMap<String, String>) -> Res
                     .filter(|s| !s.is_empty()),
                 project: values.get("project").cloned().filter(|s| !s.is_empty()),
             };
-            SecretManager::save(provider.as_str(), &secret)
+            SecretManager::save(provider, &secret)
         }
         Provider::Anthropic => {
             let secret = AnthropicSecret {
@@ -77,7 +77,7 @@ pub fn save_secrets(provider: &Provider, values: HashMap<String, String>) -> Res
                     .ok_or_else(|| anyhow::anyhow!("API key is required"))?
                     .clone(),
             };
-            SecretManager::save(provider.as_str(), &secret)
+            SecretManager::save(provider, &secret)
         }
     }
 }

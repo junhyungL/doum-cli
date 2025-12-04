@@ -10,7 +10,7 @@ pub async fn handle_switch_command() -> Result<()> {
     let providers = Provider::all();
     let provider_items: Vec<_> = providers
         .iter()
-        .map(|p| (p.as_str(), p.as_str(), ""))
+        .map(|p| (p.as_str(), p.as_display(), ""))
         .collect();
 
     let provider_str = select("Select provider")
@@ -27,17 +27,17 @@ pub async fn handle_switch_command() -> Result<()> {
         .map(|m| (m.id.as_str(), m.name.as_str(), m.description.as_str()))
         .collect();
 
-    // Add custom option
-    model_items.push(("custom", "Custom", "Enter model name manually"));
+    // Add manual option
+    model_items.push(("manual", "Manual", "Enter model name manually"));
 
     let model_id = select("Select model")
         .items(&model_items)
         .interact()
         .context("Model selection failed")?;
 
-    let model = if model_id == "custom" {
-        input("Enter custom model name")
-            .placeholder("e.g., gpt-4-turbo")
+    let model = if model_id == "manual" {
+        input("Enter manual model name")
+            .placeholder("e.g., gpt-5-mini")
             .interact()
             .context("Input failed")?
     } else {
@@ -45,6 +45,6 @@ pub async fn handle_switch_command() -> Result<()> {
     };
 
     switch_to(&provider, &model)?;
-    cliclack::outro(format!("Switched to {} - {}", provider_str, model))?;
+    cliclack::outro(format!("✅ Switched to {} - {}", provider_str, model))?;
     Ok(())
 }

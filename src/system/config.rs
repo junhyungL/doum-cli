@@ -19,7 +19,7 @@ pub struct Config {
 /// Configuration for LLM API
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LLMConfig {
-    pub provider: String,
+    pub provider: Provider,
     pub model: String,
     pub timeout: u64,
     pub max_retries: u32,
@@ -85,7 +85,7 @@ pub fn load_config() -> Result<Config> {
 pub fn load_default_config() -> Result<Config> {
     Ok(Config {
         llm: LLMConfig {
-            provider: Provider::OpenAI.as_str().to_string(),
+            provider: Provider::OpenAI,
             model: "gpt-5".to_string(),
             timeout: 30,
             max_retries: 3,

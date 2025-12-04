@@ -12,4 +12,4 @@ pub use auto_mode::select_mode;
 pub use config::{get_all_as_str, get_value, reset, set_value, unset_value};
 pub use secret::{SecretConfigData, SecretField, get_provider_config, save_secrets};
 pub use suggest::handle_suggest;
-pub use switch::{ProviderModelOption, get_all_options, switch_to};
+pub use switch::switch_to;

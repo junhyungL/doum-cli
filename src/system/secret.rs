@@ -1,3 +1,4 @@
+use crate::llm::Provider;
 use anyhow::{Context, Result};
 use keyring::Entry;
 use serde::{Deserialize, Serialize};
@@ -19,13 +20,13 @@ pub struct SecretManager;
 
 impl SecretManager {
     /// Save a secret value to the system keyring
-    pub fn save<T: ProviderSecret>(service_name: &str, secret: &T) -> Result<()> {
+    pub fn save<T: ProviderSecret>(provider: &Provider, secret: &T) -> Result<()> {
         // Validate secret
         secret.validate()?;
 
         // Save to Keyring
-        let entry =
-            Entry::new(service_name, SECRET_SERVICE_NAME).context("Failed to access keyring")?;
+        let entry = Entry::new(provider.as_str(), SECRET_SERVICE_NAME)
+            .context("Failed to access keyring")?;
         let value = serde_json::to_string(secret).context("Failed to serialize secret to JSON")?;
         entry
             .set_password(&value)
@@ -35,9 +36,9 @@ impl SecretManager {
     }
 
     /// Load secret from Keyring
-    pub fn load<T: ProviderSecret>(service_name: &str) -> Result<T> {
-        let entry =
-            Entry::new(service_name, SECRET_SERVICE_NAME).context("Failed to access keyring")?;
+    pub fn load<T: ProviderSecret>(provider: &Provider) -> Result<T> {
+        let entry = Entry::new(provider.as_str(), SECRET_SERVICE_NAME)
+            .context("Failed to access keyring")?;
 
         let secret_json = entry
             .get_password()
@@ -47,9 +48,9 @@ impl SecretManager {
     }
 
     /// Delete secret from Keyring
-    pub fn delete(service_name: &str) -> Result<()> {
-        let entry =
-            Entry::new(service_name, SECRET_SERVICE_NAME).context("Failed to access keyring")?;
+    pub fn delete(provider: &Provider) -> Result<()> {
+        let entry = Entry::new(provider.as_str(), SECRET_SERVICE_NAME)
+            .context("Failed to access keyring")?;
         entry
             .delete_credential()
             .context("Failed to delete from keyring")?;

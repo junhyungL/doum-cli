@@ -1,9 +1,9 @@
 # TODO
 
 ## Top Priority
-- [ ] **Terminal Detection**: Detect from parent terminal to capture context
-- [ ] **LLM Providers Enum**: Refactor LLM providers into an enum for cleaner code
 - [ ] **Modify Linux Security**: Adjust Linux security settings to install cargo packages, glibc version unmatched issues
+- [ ] **Remove Retry Logic**: Remove retry logic from LLM calls to avoid delays on failures
+- [ ] **Remove get_provider_config()**: Eliminate get_provider_config() function to streamline secret management
 
 ## High Priority
 
@@ -21,5 +21,4 @@
 
 ## Low Priority
 
-- [ ] **Multi-language Support**: Internationalization for UI
 - [ ] **Shell Integration**: Provide as shell plugins (zsh, bash)

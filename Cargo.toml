@@ -61,6 +61,7 @@ tracing-appender = "0.2"
 # System information
 sysinfo = "0.32"
 
+# Platform-specific dependencies for handling parent process
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 
