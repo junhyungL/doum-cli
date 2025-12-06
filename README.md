@@ -14,7 +14,16 @@ Terminal command helper powered by Large Language Models (LLMs) like OpenAI GPT 
 - 🔐 **Secret Management**: Secure API key storage with automatic verification
 - ⚙️ **Config Management**: Simple config commands (set/get/unset/show/reset)
 - 🌍 **Multi-Provider**: Support for OpenAI (GPT) and Anthropic (Claude)
-- ✨ **Modern UI**: Clean, interactive CLI powered by cliclack
+
+## System Requirements
+
+**Linux users**: 
+- **GLIBC 2.38 or higher is required** (e.g., Ubuntu 24.04+)
+- Older distributions (Ubuntu 22.04, Debian 11, etc.) are not supported due to GLIBC version requirements
+
+**macOS/iOS users**: Service and user names cannot be empty (treated as wildcards)
+
+**Windows users**: Multi-threaded access may not be serialized - access credentials from one thread at a time
 
 ## Quick Start
 
@@ -59,17 +68,6 @@ doum secret openai
 - **Linux/FreeBSD/OpenBSD**: DBus Secret Service (GNOME Keyring, KWallet)
 - **macOS/iOS**: Local Keychain
 - **Windows**: Windows Credential Manager
-
-#### Troubleshooting
-
-**Linux users**: If you encounter issues with Secret Service:
-- Ensure you have a desktop environment with keyring support (GNOME Keyring or KWallet)
-- The Secret Service uses synchronous IPC calls which may take 10-100ms per operation
-- For async runtime users: Use a separate thread for keyring operations to avoid deadlocks
-
-**macOS/iOS users**: Service and user names cannot be empty (treated as wildcards)
-
-**Windows users**: Multi-threaded access may not be serialized - access credentials from one thread at a time
 
 ### Switch Provider/Model
 

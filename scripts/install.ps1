@@ -6,7 +6,7 @@ $ErrorActionPreference = 'Stop'
 # Configuration
 $Repo = "junhyungL/doum-cli"
 $BinaryName = "doum.exe"
-$InstallDir = "$env:LOCALAPPDATA\Programs\doum"
+$InstallDir = "$env:LOCALAPPDATA\Programs\doum-cli"
 
 # Colors
 function Write-ColorOutput($ForegroundColor, $Message) {
@@ -154,13 +154,20 @@ function Main {
     
     $arch = Get-Architecture
     Write-Info "Architecture: $arch"
+    Write-Output ""
     
     $version = Get-LatestVersion
-    Install-Doum -Version $version -Arch $arch
-    Add-ToPath
-    Test-Installation
-    
     Write-Output ""
+
+    Install-Doum -Version $version -Arch $arch
+    Write-Output ""
+
+    Add-ToPath
+    Write-Output ""
+
+    Test-Installation
+    Write-Output ""
+
     Write-Success "Done!"
 }
 

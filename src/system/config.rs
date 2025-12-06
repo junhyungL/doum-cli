@@ -22,7 +22,6 @@ pub struct LLMConfig {
     pub provider: Provider,
     pub model: String,
     pub timeout: u64,
-    pub max_retries: u32,
     pub use_thinking: bool,
     pub use_web_search: bool,
 }
@@ -88,7 +87,6 @@ pub fn load_default_config() -> Result<Config> {
             provider: Provider::OpenAI,
             model: "gpt-5".to_string(),
             timeout: 30,
-            max_retries: 3,
             use_thinking: false,
             use_web_search: true,
         },
@@ -97,7 +95,7 @@ pub fn load_default_config() -> Result<Config> {
             max_size_kb: 50,
         },
         logging: LoggingConfig {
-            enabled: false,
+            enabled: true,
             level: "info".to_string(),
         },
     })

@@ -12,8 +12,8 @@ User Input → CLI Parser → Commands Handler → LLM Client → Response → U
 
 ```
 src/
-├── main.rs              # Entry point & routing
-├── cli/                 # CLI interface (each command is a module)
+├── main.rs             # Entry point & routing
+├── cli/                # CLI interface
 │   ├── args.rs         # Command line arguments
 │   ├── ask.rs          # Ask command handler
 │   ├── suggest.rs      # Suggest command handler
@@ -21,16 +21,9 @@ src/
 │   ├── secret.rs       # Secret command handler
 │   ├── switch.rs       # Switch command handler
 │   └── config.rs       # Config command handler
-├── core/               # Business logic
-│   ├── ask.rs          # Q&A mode logic
-│   ├── suggest.rs      # Command suggestion logic
-│   ├── auto_mode.rs    # Auto mode selection
-│   ├── secret.rs       # Secret management service
-│   ├── switch.rs       # Provider/Model switching service
-│   └── config.rs       # Config manager
 ├── llm/                # LLM integration
 │   ├── client.rs       # LLM client trait & verify_config
-│   ├── provider.rs     # Provider enum (OpenAI, Anthropic)
+│   ├── provider.rs     # Provider enum
 │   ├── prompt.rs       # Prompt templates
 │   ├── parser.rs       # Response parsing
 │   ├── presets.rs      # Provider/Model presets
@@ -49,26 +42,22 @@ src/
 ## Key Components
 
 ### 1. CLI Layer (`cli/`)
-- **Each command is a separate module** with its own UI logic using `cliclack`
-- **ask.rs**: Question answering with spinner feedback
-- **suggest.rs**: Command suggestions with clipboard copy
-- **auto_mode.rs**: Automatic mode selection
-- **secret.rs**: API key configuration with verification
-- **switch.rs**: Provider/Model switching with 2-step selection
-- **config.rs**: Configuration operations (set/get/unset/show/reset)
+- **Each command is a self-contained module** with UI and business logic using `cliclack`
+- **ask.rs**: Question answering with spinner feedback (includes LLM request logic)
+- **suggest.rs**: Command suggestions with clipboard copy (includes parsing and retry logic)
+- **auto_mode.rs**: Automatic mode selection (includes LLM-based mode detection)
+- **secret.rs**: API key configuration with verification (includes secret management)
+- **switch.rs**: Provider/Model switching with 2-step selection (includes config update)
+- **config.rs**: Configuration operations (set/get/unset/show/reset with value validation)
 
-### 2. Core Logic (`core/`)
-- **ask.rs**: Provides answers to questions
-- **suggest.rs**: Command suggestions with copy/execute options
-- **auto_mode.rs**: LLM analyzes input and automatically selects ask/suggest mode
-
-### 3. LLM Integration (`llm/`)
+### 2. LLM Integration (`llm/`)
+- **Client enum**: Concrete client type supporting OpenAI and Anthropic
+- **generate_with_parser**: Built-in retry logic for parsing failures (3 attempts)
 - **provider.rs**: Type-safe Provider enum with FromStr/Display traits
 - Provider-specific implementations (OpenAI, Anthropic)
 - Secure secret management (keyring + environment variables)
-- Retry logic with exponential backoff
 
-### 4. System Layer (`system/`)
+### 3. System Layer (`system/`)
 - Auto-detect OS/Shell (Windows/Linux/macOS, cmd/powershell/bash/zsh)
   - Parent process-based shell detection (primary)
   - Environment variable fallback (secondary)
@@ -100,14 +89,19 @@ Output: Success message
 provider = "openai"
 model = "gpt-4"
 timeout = 30
-max_retries = 3
+use_thinking = false
+use_web_search = true
 
-[llm.context]
+[context]
 max_lines = 100
 max_size_kb = 50
+
+[logging]
+enabled = true
+level = "info"
 ```
 
 **Secrets:** Stored separately in OS keyring or environment variables
-- Windows: Credential Manager (`openai/doum-cli`)
+- Windows: Credential Manager (`openai.doum-cli`)
 - macOS: Keychain
 - Linux: Secret Service

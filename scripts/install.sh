@@ -132,13 +132,17 @@ main() {
     
     detect_platform
     echo -e "Platform: ${GREEN}${OS} (${ARCH})${NC}"
+    ech ""
     
     get_latest_version
+    echo ""
+    
     install_doum
+    echo ""
+    
     check_path
     verify_installation
-    
-    echo ""
+
     echo -e "${GREEN}Done!${NC}"
 }
 

@@ -1,5 +1,5 @@
-use crate::core::handle_suggest;
-use crate::llm::create_client;
+use crate::llm::client::LLMRequest;
+use crate::llm::{LLMMessage, PromptBuilder, create_client, parse_suggest};
 use crate::system::{get_system_info, load_config};
 use anyhow::Result;
 use arboard::Clipboard;
@@ -9,11 +9,17 @@ pub async fn handle_suggest_command(request: &str) -> Result<()> {
     let config = load_config()?;
     let client = create_client(&config.llm)?;
     let system_info = get_system_info();
+    let builder = PromptBuilder::new(system_info.clone());
 
     let sp = spinner();
     sp.start("[SUGGEST MODE] Generating commands...");
 
-    let response = handle_suggest(request, client.as_ref(), &system_info, &config).await?;
+    let llm_request = LLMRequest {
+        system: builder.build_suggest(),
+        messages: vec![LLMMessage::user(request)],
+    };
+
+    let response = client.generate_with_parser(llm_request, parse_suggest).await?;
 
     sp.stop("");
 

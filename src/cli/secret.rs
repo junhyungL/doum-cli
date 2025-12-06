@@ -1,9 +1,7 @@
-use crate::core::{get_provider_config, save_secrets};
-use crate::llm::{Provider, load_presets, verify_client};
-use crate::system::LLMConfig;
+use crate::llm::{AnthropicSecret, OpenAISecret, Provider, load_presets, verify_client};
+use crate::system::{LLMConfig, SecretManager};
 use anyhow::{Context, Result};
 use cliclack::{input, password, select, spinner};
-use std::collections::HashMap;
 
 pub async fn handle_secret_command() -> Result<()> {
     cliclack::intro("🔐 Configure LLM Provider Secret")?;
@@ -22,45 +20,66 @@ pub async fn handle_secret_command() -> Result<()> {
 
     let provider: Provider = provider_str.parse()?;
 
-    // Step 2: Prompt for secret fields
-    let config = get_provider_config(&provider)?;
-    let mut values = HashMap::new();
-    for field in &config.fields {
-        let value = if field.is_password {
-            password(&field.label)
+    // Step 2: Input secrets based on provider
+    match provider {
+        Provider::OpenAI => {
+            let api_key = password("OpenAI API Key (required)")
                 .interact()
-                .context("Password input failed")?
-        } else {
-            // Optional field: allow empty input
-            let input_value: String = input(&field.label)
+                .context("Password input failed")?;
+
+            let organization: String = input("Organization ID (optional, press Enter to skip)")
                 .placeholder("Press Enter to skip")
                 .required(false)
                 .interact()
                 .context("Input failed")?;
-            input_value
-        };
-        values.insert(field.name.clone(), value.trim().to_string());
+
+            let project: String = input("Project ID (optional, press Enter to skip)")
+                .placeholder("Press Enter to skip")
+                .required(false)
+                .interact()
+                .context("Input failed")?;
+
+            let secret = OpenAISecret {
+                api_key: api_key.trim().to_string(),
+                organization: if organization.trim().is_empty() {
+                    None
+                } else {
+                    Some(organization.trim().to_string())
+                },
+                project: if project.trim().is_empty() {
+                    None
+                } else {
+                    Some(project.trim().to_string())
+                },
+            };
+            SecretManager::save(&provider, &secret)?;
+        }
+        Provider::Anthropic => {
+            let api_key = password("Anthropic API Key (required)")
+                .interact()
+                .context("Password input failed")?;
+
+            let secret = AnthropicSecret {
+                api_key: api_key.trim().to_string(),
+            };
+            SecretManager::save(&provider, &secret)?;
+        }
     }
 
-    // Save secrets
-    save_secrets(&provider, values)?;
-
-    // Get first model for verification
+    // Step 3: Get first model and verification
     let first_model = load_presets(&provider)
         .first()
         .map(|m| m.id.clone())
-        .unwrap_or_else(|| "gpt-5-nano".to_string());
+        .context("No preset models available for this provider")?;
 
     let llm_config = LLMConfig {
         provider,
         model: first_model.clone(),
-        max_retries: 1,
         timeout: 30,
         use_thinking: false,
         use_web_search: false,
     };
 
-    // Verify with spinner
     let sp = spinner();
     sp.start("Verifying API key...");
 

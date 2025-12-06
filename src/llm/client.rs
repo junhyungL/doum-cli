@@ -53,6 +53,55 @@ pub trait LLMClient: Send + Sync {
     async fn generate(&self, request: LLMRequest) -> Result<String>;
 }
 
+/// Concrete LLM Client enum to support different providers
+pub enum Client {
+    OpenAI(OpenAIClient),
+    Anthropic(AnthropicClient),
+}
+
+impl Client {
+    /// Generate response from LLM
+    pub async fn generate(&self, request: LLMRequest) -> Result<String> {
+        match self {
+            Client::OpenAI(client) => client.generate(request).await,
+            Client::Anthropic(client) => client.generate(request).await,
+        }
+    }
+
+    /// Generate response with parsing and retry logic (3 attempts for parsing failures only)
+    pub async fn generate_with_parser<T, P>(&self, request: LLMRequest, parser: P) -> Result<T>
+    where
+        P: Fn(&str) -> Result<T>,
+    {
+        const MAX_RETRIES: u32 = 3;
+
+        // Call LLM once - if this fails, return immediately
+        let response = self.generate(request).await?;
+
+        // Retry parsing up to MAX_RETRIES times
+        for attempt in 1..=MAX_RETRIES {
+            match parser(&response) {
+                Ok(parsed) => return Ok(parsed),
+                Err(e) => {
+                    if attempt < MAX_RETRIES {
+                        tracing::warn!(
+                            "Parse failed (attempt {}/{}): Retrying...",
+                            attempt,
+                            MAX_RETRIES
+                        );
+                        continue;
+                    } else {
+                        tracing::error!("All parse retry attempts exhausted.");
+                        return Err(e);
+                    }
+                }
+            }
+        }
+
+        unreachable!()
+    }
+}
+
 /// Verify LLM configuration without creating a persistent client
 pub async fn verify_client(config: &LLMConfig) -> Result<bool> {
     let client = create_client(config)?;
@@ -68,7 +117,7 @@ pub async fn verify_client(config: &LLMConfig) -> Result<bool> {
 }
 
 /// Create LLM client based on configuration
-pub fn create_client(config: &LLMConfig) -> Result<Box<dyn LLMClient>> {
+pub fn create_client(config: &LLMConfig) -> Result<Client> {
     match config.provider {
         Provider::OpenAI => {
             let secret: OpenAISecret =
@@ -81,7 +130,7 @@ pub fn create_client(config: &LLMConfig) -> Result<Box<dyn LLMClient>> {
                 project: secret.project,
             };
             let client = OpenAIClient::new(openai_config, config.timeout)?;
-            Ok(Box::new(client))
+            Ok(Client::OpenAI(client))
         }
         Provider::Anthropic => {
             let secret: AnthropicSecret =
@@ -92,7 +141,7 @@ pub fn create_client(config: &LLMConfig) -> Result<Box<dyn LLMClient>> {
                 api_key: secret.api_key,
             };
             let client = AnthropicClient::new(anthropic_config, config.timeout)?;
-            Ok(Box::new(client))
+            Ok(Client::Anthropic(client))
         }
     }
 }

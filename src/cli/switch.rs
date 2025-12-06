@@ -1,5 +1,5 @@
-use crate::core::switch_to;
 use crate::llm::{Provider, load_presets};
+use crate::system::{load_config, save_config};
 use anyhow::{Context, Result};
 use cliclack::{input, select};
 
@@ -44,7 +44,12 @@ pub async fn handle_switch_command() -> Result<()> {
         model_id.to_string()
     };
 
-    switch_to(&provider, &model)?;
+    // Step 3: Update configuration
+    let mut config = load_config()?;
+    config.llm.provider = provider;
+    config.llm.model = model.clone();
+    save_config(&config)?;
+
     cliclack::outro(format!("✅ Switched to {} - {}", provider_str, model))?;
     Ok(())
 }

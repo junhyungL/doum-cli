@@ -8,14 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- **Type Safety Enhancement**: Updated `LLMConfig` to use `Provider` enum instead of `String`
-  - Direct serialization/deserialization with TOML configuration
-  - Removed unnecessary string parsing throughout the codebase
-  - Improved type safety across all configuration operations
-- **Code Refactoring**: Simplified provider handling
-  - Updated `verify_config()` to accept `Provider` type directly
-  - Removed redundant `.as_str()` and `.parse()` calls
-  - Cleaner API with better compile-time guarantees
+- **Architecture Simplification**: Removed `core` module - logic integrated directly into CLI handlers
+- **LLM Client**: Replaced `Box<dyn LLMClient>` with `Client` enum for better performance
+- **Retry Logic**: Parse failures retry 3 times, API failures fail immediately (no retry)
+- **Configuration**: Removed `max_retries` setting (hardcoded to 3)
+
+### Removed
+- `core/` module (ask, suggest, auto_mode, config merged into `cli/`)
+- `llm/retry.rs` (retry logic now in `Client::generate_with_parser`)
+- `max_retries` config option
+
+### Added
+- System requirements notice: GLIBC 2.38+ required for Linux (Ubuntu 24.04+)
 
 ## [0.3.1] - 2025-12-05
 

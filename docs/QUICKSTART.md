@@ -98,13 +98,17 @@ doum config unset llm.timeout  # Revert to default
 ```
 
 ## Troubleshooting
+**Linux users:**
+- **GLIBC 2.38+ is required** - This means Ubuntu 24.04 or later, Fedora 39+, etc.
+- Older distributions (Ubuntu 22.04, Debian 11, CentOS 9, etc.) are **not supported**
+- If you encounter GLIBC version errors, you need to upgrade your system or use a newer distribution
 
-### Keyring Not Working
-If secrets does not save/load correctly:
-- Ensure your OS keyring service is running (e.g., GNOME Keyring, KWallet, Keychain, Credential Manager)
+**macOS/Windows users:**
+- Ensure your OS keyring service is running (Keychain for macOS, Credential Manager for Windows)
 - Check for any error messages during `doum secret` execution
 
 ### Check Logs
 Log file location:
-- Linux/macOS: `~/.local/share/doum-cli/logs/`
+- Linux: `~/.local/doum-cli/logs/`
+- macOS: `~/Library/Application Support/doum-cli/logs/`
 - Windows: `%APPDATA%\doum-cli\logs\`
