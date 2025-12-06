@@ -1,5 +1,9 @@
 # TODO
 
+## Top Priority
+- [ ] **Add Update Mechanism**: Implement a way to update the tool easily
+- [ ] **Add Status Command**: Create a command to check the current version and update status
+
 ## High Priority
 
 - [ ] **Web Search Integration**: Enable web search when LLM needs up-to-date information

@@ -1,6 +1,6 @@
 [package]
 name = "doum-cli"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2024"
 authors = ["junhyungL"]
 description = "AI-powered terminal assistant that helps you with command-line tasks."
