@@ -1,5 +1,5 @@
 use crate::llm::Provider;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use keyring::Entry;
 use serde::{Deserialize, Serialize};
 
@@ -26,11 +26,12 @@ impl SecretManager {
 
         // Save to Keyring
         let entry = Entry::new(provider.as_str(), SECRET_SERVICE_NAME)
-            .context("Failed to access keyring")?;
-        let value = serde_json::to_string(secret).context("Failed to serialize secret to JSON")?;
+            .map_err(|e| anyhow::anyhow!("Failed to access keyring: {}", e))?;
+        let value = serde_json::to_string(secret)
+            .map_err(|e| anyhow::anyhow!("Failed to serialize secret: {}", e))?;
         entry
             .set_password(&value)
-            .context("Failed to save to keyring")?;
+            .map_err(|e| anyhow::anyhow!("Failed to save to keyring: {}", e))?;
 
         Ok(())
     }
@@ -38,22 +39,23 @@ impl SecretManager {
     /// Load secret from Keyring
     pub fn load<T: ProviderSecret>(provider: &Provider) -> Result<T> {
         let entry = Entry::new(provider.as_str(), SECRET_SERVICE_NAME)
-            .context("Failed to access keyring")?;
+            .map_err(|e| anyhow::anyhow!("Failed to access keyring: {}", e))?;
 
         let secret_json = entry
             .get_password()
-            .context("Failed to retrieve from keyring")?;
+            .map_err(|e| anyhow::anyhow!("Failed to retrieve from keyring: {}", e))?;
 
-        serde_json::from_str(&secret_json).context("Failed to parse secret")
+        serde_json::from_str(&secret_json)
+            .map_err(|e| anyhow::anyhow!("Failed to parse secret: {}", e))
     }
 
     /// Delete secret from Keyring
     pub fn delete(provider: &Provider) -> Result<()> {
         let entry = Entry::new(provider.as_str(), SECRET_SERVICE_NAME)
-            .context("Failed to access keyring")?;
+            .map_err(|e| anyhow::anyhow!("Failed to access keyring: {}", e))?;
         entry
             .delete_credential()
-            .context("Failed to delete from keyring")?;
+            .map_err(|e| anyhow::anyhow!("Failed to delete from keyring: {}", e))?;
         Ok(())
     }
 }
