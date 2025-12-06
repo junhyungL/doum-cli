@@ -109,6 +109,6 @@ doum config unset llm.timeout  # Revert to default
 
 ### Check Logs
 Log file location:
-- Linux: `~/.local/doum-cli/logs/`
+- Linux: `~/.config/doum-cli/logs/`
 - macOS: `~/Library/Application Support/doum-cli/logs/`
 - Windows: `%APPDATA%\doum-cli\logs\`

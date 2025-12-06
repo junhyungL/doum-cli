@@ -132,7 +132,7 @@ main() {
     
     detect_platform
     echo -e "Platform: ${GREEN}${OS} (${ARCH})${NC}"
-    ech ""
+    echo ""
     
     get_latest_version
     echo ""
